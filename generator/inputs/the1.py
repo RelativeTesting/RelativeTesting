@@ -2,9 +2,9 @@ take_off_distance = 300 #km
 flight_distance = 384400 #km
 landing_distance = 100 #km
 
-take_off_v = int(input("Please enter the average take-off velocity (m/s): ")) #m/s
-flight_v = int(input("Please enter the average flight velocity (m/s): ")) #m/s
-landing_v = int(input("Please enter the average landing velocity (m/s): ")) #m/s
+take_off_v = int(input("Please enter the average take-off velocity: ")) #m/s
+flight_v = int(input("Please enter the average flight velocity: ")) #m/s
+landing_v = int(input("Please enter the average landing velocity: ")) #m/s
 
 t1 = take_off_distance*1000 / take_off_v
 t2 = flight_distance*1000 / flight_v

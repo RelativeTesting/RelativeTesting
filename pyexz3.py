@@ -23,6 +23,7 @@ parser.add_option("-m", "--max-iters", dest="max_iters", type="int", help="Run s
 parser.add_option("--cvc", dest="cvc", action="store_true", help="Use the CVC SMT solver instead of Z3", default=False)
 parser.add_option("--z3", dest="cvc", action="store_false", help="Use the Z3 SMT solver")
 
+
 (options, args) = parser.parse_args()
 
 if not (options.logfile == ""):
@@ -38,6 +39,7 @@ filename = os.path.abspath(args[0])
 	
 # Get the object describing the application
 app = loaderFactory(filename,options.entry)
+print("entry", options)
 if app == None:
 	sys.exit(1)
 

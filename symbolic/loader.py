@@ -32,6 +32,8 @@ class Loader:
 		inv = FunctionInvocation(self._execute,self._resetCallback)
 		func = self.app.__dict__[self._entryPoint]
 		argspec = inspect.getfullargspec(func)
+		print("argspec", argspec)
+		print("func.dict", func.__dict__)
 		# check to see if user specified initial values of arguments
 		if "concrete_args" in func.__dict__:
 			for (f,v) in func.concrete_args.items():
@@ -57,6 +59,7 @@ class Loader:
 		for a in argspec.args:
 			if not a in inv.getNames():
 				Loader._initializeArgumentSymbolic(inv, a, 0, SymbolicInteger)
+		
 		return inv
 
 	# need these here (rather than inline above) to correctly capture values in lambda

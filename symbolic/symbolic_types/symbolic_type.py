@@ -109,6 +109,7 @@ class SymbolicObject(SymbolicType,object):
 
 	def __bool__(self):
 		ret = bool(self.getConcrValue())
+		print("smart move")
 		if SymbolicObject.SI != None:
 			SymbolicObject.SI.whichBranch(ret,self)
 		return ret

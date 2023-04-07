@@ -20,6 +20,8 @@ class ExplorationEngine:
 		for n in funcinv.getNames():
 			self.symbolic_inputs[n] = funcinv.createArgumentValue(n)
 
+		
+		print("init input", self.symbolic_inputs)
 		self.constraints_to_solve = deque([])
 		self.num_processed_constraints = 0
 
@@ -92,6 +94,7 @@ class ExplorationEngine:
 
 	def _isExplorationComplete(self):
 		num_constr = len(self.constraints_to_solve)
+		print("num_cons", num_constr)
 		if num_constr == 0:
 			log.info("Exploration complete")
 			return True
@@ -114,7 +117,8 @@ class ExplorationEngine:
 	def _oneExecution(self,expected_path=None):
 		self._recordInputs()
 		self.path.reset(expected_path)
+		print("sym in", self.symbolic_inputs)
 		ret = self.invocation.callFunction(self.symbolic_inputs)
-		print(ret)
+		print(ret, "hello")
 		self.execution_return_values.append(ret)
 

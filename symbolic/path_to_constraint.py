@@ -29,6 +29,7 @@ class PathToConstraint:
 	def whichBranch(self, branch, symbolic_type):
 		""" This function acts as instrumentation.
 		Branch can be either True or False."""
+		print("ever come here")
 
 		# add both possible predicate outcomes to constraint (tree)
 		p = Predicate(symbolic_type, branch)

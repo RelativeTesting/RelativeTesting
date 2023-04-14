@@ -1,9 +1,6 @@
 from symbolic.args import *
 
 
-@symbolic(param1!=0, param2!=0, param3!=0)
-
-["!=", 0, param1]
 def power(param1, param2, param3):
 	take_off_distance = 300 #km
 	flight_distance = 384400 #km

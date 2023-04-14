@@ -48,13 +48,12 @@ class ExplorationEngine:
 
 	def explore(self, max_iterations=0):
 		self._oneExecution()
-		
 		iterations = 1
 		if max_iterations != 0 and iterations >= max_iterations:
 			log.debug("Maximum number of iterations reached, terminating")
 			return self.execution_return_values
-
 		while not self._isExplorationComplete():
+			print("hello4")
 			selected = self.constraints_to_solve.popleft()
 			if selected.processed:
 				continue
@@ -63,6 +62,7 @@ class ExplorationEngine:
 			log.info("Selected constraint %s" % selected)
 			asserts, query = selected.getAssertsAndQuery()
 			model = self.solver.findCounterexample(asserts, query)
+			print("model", model)
 
 			if model == None:
 				continue
@@ -79,6 +79,8 @@ class ExplorationEngine:
 				log.info("Maximum number of iterations reached, terminating")
 				break
 
+	
+		print("self.generated", self.generated_inputs)
 		return self.generated_inputs, self.execution_return_values, self.path
 
 	# private
@@ -94,7 +96,7 @@ class ExplorationEngine:
 
 	def _isExplorationComplete(self):
 		num_constr = len(self.constraints_to_solve)
-		print("num_cons", num_constr)
+		#print("num_cons", num_constr)
 		if num_constr == 0:
 			log.info("Exploration complete")
 			return True
@@ -117,8 +119,8 @@ class ExplorationEngine:
 	def _oneExecution(self,expected_path=None):
 		self._recordInputs()
 		self.path.reset(expected_path)
-		print("sym in", self.symbolic_inputs)
+		#print("sym in", self.symbolic_inputs)
 		ret = self.invocation.callFunction(self.symbolic_inputs)
-		print(ret, "hello")
+		#print(ret, "hello")
 		self.execution_return_values.append(ret)
 

@@ -12,6 +12,7 @@ class Z3Expression(object):
 		self.z3_vars = {}
 		solver.assert_exprs([self.predToZ3(p,solver) for p in asserts])
 		solver.assert_exprs(Not(self.predToZ3(query,solver)))
+		
 
 	def predToZ3(self,pred,solver,env=None):
 		sym_expr = self._astToZ3Expr(pred.symtype,solver,env)
@@ -23,6 +24,7 @@ class Z3Expression(object):
 		else:
 			if not pred.result:
 				sym_expr = not sym_expr
+		print("here", sym_expr)
 		return sym_expr
 
 	def getIntVars(self):

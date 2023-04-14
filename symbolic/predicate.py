@@ -5,6 +5,7 @@ class Predicate:
 	   """
 	def __init__(self, st, result):
 		self.symtype = st
+		#print("predicate type", st)
 		self.result = result
 
 	def getVars(self):

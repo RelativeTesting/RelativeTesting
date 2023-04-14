@@ -53,6 +53,7 @@ class SymbolicType(object):
 		args = zip(inspect.getfullargspec(fun).args, [ c for (c,s) in unwrapped ])
 		concrete = fun(**dict([a for a in args]))
 		symbolic = [ op ] + [ s for c,s in unwrapped ]
+		#print("wrap", wrap(concrete,symbolic), "unwrapped", unwrapped, "args",args, "symbolic",symbolic)
 		return wrap(concrete,symbolic)
 
 	def symbolicEq(self, other):
@@ -109,13 +110,14 @@ class SymbolicObject(SymbolicType,object):
 
 	def __bool__(self):
 		ret = bool(self.getConcrValue())
-		print("smart move")
+		#print("smart move", self)
 		if SymbolicObject.SI != None:
 			SymbolicObject.SI.whichBranch(ret,self)
 		return ret
 
 	# compute both the symbolic and concrete image of operator
 	def _do_bin_op(self, other, fun, op, wrap):
+		#print("op is", op)
 		return self._do_sexpr([self,other], fun, op, wrap)
 
 	def __eq__(self, other):

@@ -21,12 +21,20 @@ class ExplorationEngine:
 			self.symbolic_inputs[n] = funcinv.createArgumentValue(n)
 
 		
-		print("init input", self.symbolic_inputs)
+		#print("init input", self.symbolic_inputs)
 		self.constraints_to_solve = deque([])
 		self.num_processed_constraints = 0
 
 		self.path = PathToConstraint(lambda c : self.addConstraint(c))
 		# link up SymbolicObject to PathToConstraint in order to intercept control-flow
+
+		if funcinv.pre_constraints != []:
+			for c in funcinv.pre_constraints:
+				b = self.path.current_constraint.addChild(c.predicate)
+				self.addConstraint(b)
+				break
+
+
 		symbolic_type.SymbolicObject.SI = self.path
 
 		if solver == "z3":
@@ -47,13 +55,15 @@ class ExplorationEngine:
 		constraint.inputs = self._getInputs()
 
 	def explore(self, max_iterations=0):
-		self._oneExecution()
+		if self._isExplorationComplete():
+			print("Exploration without symbolic assertions")
+			self._oneExecution()
 		iterations = 1
 		if max_iterations != 0 and iterations >= max_iterations:
 			log.debug("Maximum number of iterations reached, terminating")
 			return self.execution_return_values
 		while not self._isExplorationComplete():
-			print("hello4")
+
 			selected = self.constraints_to_solve.popleft()
 			if selected.processed:
 				continue
@@ -61,8 +71,12 @@ class ExplorationEngine:
 
 			log.info("Selected constraint %s" % selected)
 			asserts, query = selected.getAssertsAndQuery()
+
+			for pred in self.invocation.pre_asserts:
+				asserts.append(pred)
+
 			model = self.solver.findCounterexample(asserts, query)
-			print("model", model)
+			#print("model", model)
 
 			if model == None:
 				continue
@@ -114,7 +128,7 @@ class ExplorationEngine:
 		args = self.symbolic_inputs
 		inputs = [ (k,self._getConcrValue(args[k])) for k in args ]
 		self.generated_inputs.append(inputs)
-		print(inputs)
+		#print(inputs)
 		
 	def _oneExecution(self,expected_path=None):
 		self._recordInputs()

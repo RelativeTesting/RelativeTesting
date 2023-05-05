@@ -24,7 +24,6 @@ class Z3Expression(object):
 		else:
 			if not pred.result:
 				sym_expr = not sym_expr
-		print("here", sym_expr)
 		return sym_expr
 
 	def getIntVars(self):

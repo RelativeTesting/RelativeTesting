@@ -23,7 +23,8 @@ class Z3Wrapper(object):
 	  	 asserts remains valid."""
 		self.solver = Solver()
 		self.query = query
-		self.asserts = self._coneOfInfluence(asserts,query)
+		#self.asserts = self._coneOfInfluence(asserts,query)
+		self.asserts = asserts
 		res = self._findModel()
 		log.debug("Query -- %s" % self.query)
 		log.debug("Asserts -- %s" % asserts)

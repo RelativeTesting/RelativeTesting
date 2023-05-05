@@ -6,6 +6,8 @@ class FunctionInvocation:
 		self.reset = reset
 		self.arg_constructor = {}
 		self.initial_value = {}
+		self.pre_constraints = []
+		self.pre_asserts = []
 
 	def callFunction(self,args):
 		self.reset()
@@ -22,6 +24,13 @@ class FunctionInvocation:
 		if val == None:
 			val = self.initial_value[name]
 		return self.arg_constructor[name](name,val)
+	
+	def addPreConstraint(self, constraint):
+		self.pre_constraints.append(constraint)
+
+	def addPreAsserts(self, asserts):
+		self.pre_asserts.append(asserts)
+		
 
 	
 

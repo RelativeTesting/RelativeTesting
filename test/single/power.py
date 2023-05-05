@@ -1,13 +1,12 @@
 from symbolic.args import *
 
 
+@symbolic(param1 = "@ param1 > 1", param2 = "@ param2 > 1", param3 = "@ param3 > 1")
 def power(param1, param2, param3):
 	take_off_distance = 300 #km
 	flight_distance = 384400 #km
 	landing_distance = 100 #km
 	
-	if param1 == 0 or param2 == 0 or param3 == 0:
-		return 2
 
 	take_off_v = int(param1) #m/s
 	flight_v = int(param2) #m/s

@@ -6,6 +6,8 @@ import os
 import sys
 from .invocation import FunctionInvocation
 from .symbolic_types import SymbolicInteger, getSymbolic
+from .constraint import Constraint
+from .predicate import Predicate
 
 # The built-in definition of len wraps the return value in an int() constructor, destroying any symbolic types.
 # By redefining len here we can preserve symbolic integer types.
@@ -32,8 +34,6 @@ class Loader:
 		inv = FunctionInvocation(self._execute,self._resetCallback)
 		func = self.app.__dict__[self._entryPoint]
 		argspec = inspect.getfullargspec(func)
-		print("argspec", argspec)
-		print("func.dict", func.__dict__)
 		# check to see if user specified initial values of arguments
 		if "concrete_args" in func.__dict__:
 			for (f,v) in func.concrete_args.items():
@@ -44,6 +44,7 @@ class Loader:
 					Loader._initializeArgumentConcrete(inv,f,v)
 		if "symbolic_args" in func.__dict__:
 			for (f,v) in func.symbolic_args.items():
+				#print("here we are", func.__dict__, inv.getNames())
 				if not f in argspec.args:
 					print("Error (@symbolic): " +  self._entryPoint + " has no argument named " + f)
 					raise ImportError()
@@ -51,11 +52,44 @@ class Loader:
 					print("Argument " + f + " defined in both @concrete and @symbolic")
 					raise ImportError()
 				else:
-					s = getSymbolic(v)
-					if (s == None):
+					symbolic_constructor = getSymbolic(v)
+					
+					if (symbolic_constructor == None):
 						print("Error at argument " + f + " of entry point " + self._entryPoint + " : no corresponding symbolic type found for type " + str(type(v)))
 						raise ImportError()
-					Loader._initializeArgumentSymbolic(inv, f, v, s)
+					
+					
+					if v[0] != "@": # not a constraint
+						Loader._initializeArgumentSymbolic(inv, f, v, symbolic_constructor)
+					else:
+						# add constraint
+						#SymbolicType ['==', 300000, 0]
+						tmp = v[1:].replace(" ", "")
+						tmp = tmp.replace(f, "")
+
+						correct_op = ""
+						ops = ["==", "!=", "<", ">", "<=", ">="]
+						for op in ops:
+							if op in tmp:
+								tmp = tmp.replace(op, "")
+								correct_op = op
+								break
+						
+						expr = []
+						if tmp.isnumeric() or (tmp[0] == "-" and tmp[1:].isnumeric()):
+							
+							st = SymbolicInteger(f, 0)
+							expr = [correct_op, st, int(tmp)]
+							se = SymbolicInteger("se", 1, expr)
+							pred = Predicate(se, do_op(correct_op, 0, int(tmp)))
+							cons = Constraint(None, pred)
+							inv.addPreConstraint(cons)
+
+							pred2 = Predicate(se, not do_op(correct_op, 0, int(tmp)))
+							inv.addPreAsserts(pred2)
+							Loader._initializeArgumentSymbolic(inv, f, 0, SymbolicInteger)
+						
+
 		for a in argspec.args:
 			if not a in inv.getNames():
 				Loader._initializeArgumentSymbolic(inv, a, 0, SymbolicInteger)
@@ -134,3 +168,19 @@ def loaderFactory(filename,entry):
 		return None
 
 
+def do_op(op, left, right):
+	match op:
+		case ">":
+			return left > right
+		case "<":
+			return left < right
+		case ">=":
+			return left >= right
+		case "<=":
+			return left <= right
+		case "==":
+			return left == right
+		case "!=":
+			return left != right
+		case _:
+			return False

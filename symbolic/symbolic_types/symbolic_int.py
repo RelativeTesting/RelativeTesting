@@ -48,10 +48,10 @@ ops =  [("add",    "+"  ),\
 def make_method(method,op,a):
 	
 	code  = "def %s(self,other):\n" % method
-	code += "	ret = bool(self.getConcrValue()) \n"
+	code += "	ret = self.getConcrValue() == other  \n"
 	code += "	change_operators(self.expr, '==') \n"
 	code += "	#print(%s, '%s', %s, %s, self.expr)\n" % ("'method:'", op, a, "'return is:'")
-	code += "	SymbolicObject.SI.whichBranch(True, self)\n"
+	code += "	SymbolicObject.SI.whichBranch(not ret, self)\n"
 	code += "	#change_operators(self.expr, '!=') \n"
 	code += "	#SymbolicObject.SI.whichBranch(True, self)\n"
 	code += "	#if self.expr != None: \n"
@@ -69,7 +69,7 @@ for (name,op) in ops:
 
 
 def change_operators(expr, op=None):
-	#print("change_operators", expr)
+	#print("change_operators1", expr)
 	if isinstance(expr, list):
 		nested = False
 		for i in range(len(expr)-1, -1, -1):
@@ -81,4 +81,4 @@ def change_operators(expr, op=None):
 					expr[i] = '&'
 				else:
 					expr[i] = op
-	print("change_operators", expr)
+	#print("change_operators2", expr)

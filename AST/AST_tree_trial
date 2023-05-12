@@ -1,0 +1,14 @@
+Module(
+    body=[
+Assign(targets=[Name(id='knight_hor', ctx=Store())], 
+    value=Call(
+        func=Attribute(
+            value=Call(func=Name(id='input', ctx=Load()),args=[Constant(value='Please enter horizontal position of the knight (a,b,c,d,e,f,g,h): ')], keywords=[]),
+            attr='lower', ctx=Load()), args=[], keywords=[])),
+Assign(targets=[Name(id='input2', ctx=Store())], 
+    value=Call(
+        func=Attribute(
+            value=Call(func=Attribute(value=Call(func=Name(id='input', ctx=Load()), args=[], keywords=[]), attr='upper', ctx=Load()), args=[], keywords=[]), 
+            attr='lower', ctx=Load()), args=[], keywords=[])),
+Assign(targets=[Name(id='input3', ctx=Store())], 
+    value=Name(id='param1', ctx=Load()))], type_ignores=[])

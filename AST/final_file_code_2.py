@@ -1,4 +1,4 @@
-def my_function(param1: str, param2: str, param3: str, param4: str):
+def my_function(param1: str, param2: int, param3: str, param4: int):
     letters = 'abcdefgh'
     knight_hor = param1.lower()
     if len(knight_hor) != 1 or not knight_hor.isalpha():

@@ -1,23 +1,21 @@
 from symbolic.args import *
 
 
-@symbolic(param1 = "@ param1 > 1", param2 = "@ param2 > 1", param3 = "@ param3 > 1")
+@symbolic(param1 = "@ param1 > 10", param2 = "@ param2 != 0", param3 = "@ param3 != 0")
 def power(param1, param2, param3):
 	take_off_distance = 300 #km
 	flight_distance = 384400 #km
 	landing_distance = 100 #km
-	
 
-	take_off_v = int(param1) #m/s
-	flight_v = int(param2) #m/s
-	landing_v = int(param3) #m/s
+	take_off_v = param1 #m/s
+	flight_v = param2 #m/s
+	landing_v = param3 #m/s
 	
-	t1 = take_off_distance*1000 / param1
-	t2 = flight_distance*1000 / param2
-	t3 = landing_distance*1000 / param3
+	t1 = take_off_distance*1000 / take_off_v
+	t2 = flight_distance*1000 / flight_v
+	t3 = landing_distance*1000 / landing_v
 	
 	total_secs = t1+t2+t3
-	#print("Total_secs:", total_secs)
 	
 	days = total_secs // (24 * 60 * 60)
 	total_secs %= (24 * 60 * 60)
@@ -32,5 +30,5 @@ def power(param1, param2, param3):
 
 	return 1
 def expected_result():
-	return [1,2]
+	return {1}
 

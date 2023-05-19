@@ -48,9 +48,9 @@ class Loader:
 				if not f in argspec.args:
 					print("Error (@symbolic): " +  self._entryPoint + " has no argument named " + f)
 					raise ImportError()
-				elif f in inv.getNames():
-					print("Argument " + f + " defined in both @concrete and @symbolic")
-					raise ImportError()
+				# elif f in inv.getNames():
+				# 	print("Argument " + f + " defined in both @concrete and @symbolic")
+				# 	raise ImportError()
 				else:
 					symbolic_constructor = getSymbolic(v)
 					
@@ -87,7 +87,30 @@ class Loader:
 
 							pred2 = Predicate(se, not do_op(correct_op, 0, int(tmp)))
 							inv.addPreAsserts(pred2)
-							Loader._initializeArgumentSymbolic(inv, f, 0, SymbolicInteger)
+							if f not in inv.getNames():
+								Loader._initializeArgumentSymbolic(inv, f, 0, SymbolicInteger)
+						else:
+							if tmp[0] != "\"" and tmp[0] != "'":
+								left = SymbolicInteger(f, 0)
+								right = SymbolicInteger(tmp, 0)
+								expr = [correct_op, left, right]
+								
+								se = SymbolicInteger("se", 1, expr)
+								pred = Predicate(se, do_op(correct_op, 0, 0))
+								cons = Constraint(None, pred)
+								inv.addPreConstraint(cons)
+
+								pred2 = Predicate(se, not do_op(correct_op, 0, 0))
+								inv.addPreAsserts(pred2)
+								if tmp not in inv.getNames():
+									Loader._initializeArgumentSymbolic(inv, tmp, 0, SymbolicInteger)
+
+								if f not in inv.getNames():
+									Loader._initializeArgumentSymbolic(inv, f, 0, SymbolicInteger)
+							
+
+
+
 						
 
 		for a in argspec.args:

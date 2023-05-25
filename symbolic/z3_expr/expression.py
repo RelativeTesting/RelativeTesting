@@ -9,12 +9,14 @@ class Z3Expression(object):
 		self.z3_vars = {}
 
 	def toZ3(self,solver,asserts,query):
+		print("toZ3", type(asserts), type(query))
 		self.z3_vars = {}
 		solver.assert_exprs([self.predToZ3(p,solver) for p in asserts])
 		solver.assert_exprs(Not(self.predToZ3(query,solver)))
 		
 
 	def predToZ3(self,pred,solver,env=None):
+		print("predToZ3", type(pred))
 		sym_expr = self._astToZ3Expr(pred.symtype,solver,env)
 		if env == None:
 			if not is_bool(sym_expr):
@@ -53,6 +55,7 @@ class Z3Expression(object):
 
 	# add concrete evaluation to this, to check
 	def _astToZ3Expr(self,expr,solver,env=None):
+		#print("_astToZ3Expr", type(expr).__name__, expr.val, expr.name, expr.expr)
 		if isinstance(expr, list):
 			op = expr[0]
 			args = [ self._astToZ3Expr(a,solver,env) for a in expr[1:] ]

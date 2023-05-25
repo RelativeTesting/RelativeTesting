@@ -21,6 +21,7 @@ class Z3Wrapper(object):
 	def findCounterexample(self, asserts, query):
 		"""Tries to find a counterexample to the query while
 	  	 asserts remains valid."""
+		print("ever here5")
 		self.solver = Solver()
 		self.query = query
 		#self.asserts = self._coneOfInfluence(asserts,query)
@@ -52,16 +53,21 @@ class Z3Wrapper(object):
 
 	def _findModel(self):
 		# Try QF_LIA first (as it may fairly easily recognize unsat instances)
+		print("ever here6")
 		if self.use_lia:
 			self.solver.push()
+			print("ever here7")
 			self.z3_expr = Z3Integer()
+			print("self.asserts", self.asserts, "self.query", self.query)
 			self.z3_expr.toZ3(self.solver,self.asserts,self.query)
+			print("ever here8")
 			res = self.solver.check()
 			#print(self.solver.assertions)
 			self.solver.pop()
 			if res == unsat:
 				return None
 
+		print("ever here7")
 		# now, go for SAT with bounds
 		self.N = 32
 		self.bound = (1 << 4) - 1

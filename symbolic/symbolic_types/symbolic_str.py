@@ -23,8 +23,8 @@ class SymbolicStr(SymbolicObject, str):
     def _op_worker(self, args, fun, op):
         return self._do_sexpr(args, fun, op, SymbolicStr.wrap)
 
-    def __bool__(self):
-        return SymbolicObject.__bool__(self.__len__() != 0)
+    # def __bool__(self):
+    #     return SymbolicObject.__bool__(self.__len__() != 0)
 
     def __len__(self):
         return self._do_sexpr([self], lambda x: len(x),

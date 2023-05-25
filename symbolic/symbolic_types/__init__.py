@@ -6,7 +6,17 @@ from .symbolic_dict import SymbolicDict as SymD
 from .symbolic_str import SymbolicStr as SymS
 from .symbolic_type import SymbolicType as SymType
 
-SymObj.wrap = lambda conc, sym : SymbolicInteger("se",conc,sym)
+
+def wrap(conc, sym):
+	name = type(sym[1]).__name__
+	if name == "SymbolicInteger":
+		return SymbolicInteger("se",conc,sym)
+	elif name == "SymbolicStr":
+		return SymbolicStr("se",conc,sym)
+	return SymbolicInteger("se",conc,sym)
+	
+
+SymObj.wrap = wrap
 SymbolicInteger = SymInt
 SymbolicDict = SymD
 SymbolicStr = SymS

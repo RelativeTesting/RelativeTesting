@@ -112,6 +112,7 @@ class SymbolicObject(SymbolicType,object):
 		ret = bool(self.getConcrValue())
 		#print("smart move", self)
 		if SymbolicObject.SI != None:
+			print("again", type(self), self, ret)
 			SymbolicObject.SI.whichBranch(ret,self)
 		return ret
 

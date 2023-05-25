@@ -9,3 +9,9 @@ def concrete(**arg_types):
 		f.concrete_args = arg_types
 		return f
 	return decorator
+
+def types(**arg_types):
+	def decorator(f):
+		f.type_args = arg_types
+		return f
+	return decorator

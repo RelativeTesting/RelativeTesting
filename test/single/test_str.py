@@ -4,6 +4,6 @@ from symbolic.args import *
 def test_str(x, y):
     if x == "3":
         return 1
-    if y == "4":
+    if y != "4":
         return 2
     return 3

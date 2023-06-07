@@ -12,7 +12,7 @@ def wrap(conc, sym):
 	if name == "SymbolicInteger":
 		return SymbolicInteger("se",conc,sym)
 	elif name == "SymbolicStr":
-		return SymbolicStr("se",conc,sym)
+		return SymbolicStr("sx",str(int(conc)),sym)
 	return SymbolicInteger("se",conc,sym)
 	
 

@@ -7,6 +7,7 @@ import logging
 from z3 import *
 from .z3_expr.integer import Z3Integer
 from .z3_expr.bitvector import Z3BitVector
+from .z3_expr.string import Z3String
 
 log = logging.getLogger("se.z3")
 
@@ -21,7 +22,6 @@ class Z3Wrapper(object):
 	def findCounterexample(self, asserts, query):
 		"""Tries to find a counterexample to the query while
 	  	 asserts remains valid."""
-		print("ever here5")
 		self.solver = Solver()
 		self.query = query
 		#self.asserts = self._coneOfInfluence(asserts,query)
@@ -53,50 +53,50 @@ class Z3Wrapper(object):
 
 	def _findModel(self):
 		# Try QF_LIA first (as it may fairly easily recognize unsat instances)
-		print("ever here6")
+		type_name = "Z3Integer"
+		if type_name == "Z3Integer":
+			return self._findModelInt()
+		elif type_name == "Z3String":
+			return self._findModelString()
+
+	def _findModelInt(self):
 		if self.use_lia:
 			self.solver.push()
-			print("ever here7")
 			self.z3_expr = Z3Integer()
-			print("self.asserts", self.asserts, "self.query", self.query)
-			self.z3_expr.toZ3(self.solver,self.asserts,self.query)
-			print("ever here8")
+			self.z3_expr.toZ3(self.solver,self.asserts,self.query)			
 			res = self.solver.check()
-			#print(self.solver.assertions)
 			self.solver.pop()
 			if res == unsat:
 				return None
 
-		print("ever here7")
 		# now, go for SAT with bounds
 		self.N = 32
 		self.bound = (1 << 4) - 1
 		while self.N <= 64:
 			self.solver.push()
-			(ret,mismatch) = self._findModel2()
+			(ret,mismatch) = self._findModel2Int()
 			if (not mismatch):
 				break
 			self.solver.pop()
 			self.N = self.N+8
 			if self.N <= 64: print("expanded bit width to "+str(self.N)) 
-		#print("Assertions")
-		#print(self.solver.assertions())
 		if ret == unsat:
 			res = None
 		elif ret == unknown:
 			res = None
 		elif not mismatch:
-			res = self._getModel()
+			res = self._getModelInt()
 		else:
 			res = None
 		if self.N<=64: self.solver.pop()
 		return res
 
+
 	def _setAssertsQuery(self):
 		self.z3_expr = Z3BitVector(self.N)
 		self.z3_expr.toZ3(self.solver,self.asserts,self.query)
 
-	def _findModel2(self):
+	def _findModel2Int(self):
 		self._setAssertsQuery()
 		int_vars = self.z3_expr.getIntVars()
 		res = unsat
@@ -110,9 +110,8 @@ class Z3Wrapper(object):
 				self.solver.pop()
 		if res == sat:
 			# Does concolic agree with Z3? If not, it may be due to overflow
-			model = self._getModel()
-			#print("Match?")
-			#print(self.solver.assertions)
+			model = self._getModelInt()
+			print("model", model)
 			self.solver.pop()
 			mismatch = False
 			for a in self.asserts:
@@ -121,14 +120,58 @@ class Z3Wrapper(object):
 					mismatch = True
 					break
 			if (not mismatch):
-				mismatch = not (not self.z3_expr.predToZ3(self.query,self.solver,model))
+				a = self.z3_expr.predToZ3(self.query,self.solver,model)
+				mismatch = not (not a)
 			#print(mismatch)
 			return (res,mismatch)
 		elif res == unknown:
 			self.solver.pop()
 		return (res,False)
 
-	def _getModel(self):
+	def _findModelString(self):
+		if self.use_lia:
+			self.solver.push()
+			self.z3_expr = Z3String()
+			self.z3_expr.toZ3(self.solver,self.asserts,self.query)			
+			res = self.solver.check()
+			self.solver.pop()
+			if res == unsat:
+				return None
+		
+		(ret, mismatch) = self._findModel2string()
+		if ret == unsat:
+			res = None
+		elif ret == unknown:
+			res = None
+		elif not mismatch:
+			res = self._getModelString()
+		else:
+			res = None
+		return res
+		
+		(ret, mismatch) = self._findModel2string()
+	def _findModel2string(self):
+		self.z3_expr.toZ3(self.solver,self.asserts,self.query)
+		print("solver ", self.solver.assertions())
+		res = unsat
+		self.solver.push()		
+		res = self.solver.check()
+
+		if res == sat:
+			ans = {}
+			print("solver ", self.solver.assertions())
+			model = self.solver.model()
+			print("model", model)
+			for name in self.z3_expr.z3_vars.keys():
+				try:
+					ce = model.eval(self.z3_expr.z3_vars[name])
+					ans[name] = ce
+				except:
+					pass
+			return (ans,False)
+		return (res,False)
+	
+	def _getModelInt(self):
 		res = {}
 		model = self.solver.model()
 		for name in self.z3_expr.z3_vars.keys():
@@ -139,6 +182,17 @@ class Z3Wrapper(object):
 				pass
 		return res
 	
+	def _getModelString(self):
+		res = {}
+		model = self.solver.model()
+		for name in self.z3_expr.z3_vars.keys():
+			try:
+				ce = model.eval(self.z3_expr.z3_vars[name])
+				res[name] = ce.as_string()
+			except:
+				pass
+		return res
+
 	def _boundIntegers(self,vars,val):
 		bval = BitVecVal(val,self.N,self.solver.ctx)
 		bval_neg = BitVecVal(-val-1,self.N,self.solver.ctx)

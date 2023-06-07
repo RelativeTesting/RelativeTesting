@@ -57,15 +57,12 @@ class ExplorationEngine:
 	def explore(self, max_iterations=0):
 		if self._isExplorationComplete():
 			log.debug("Exploration without symbolic assertions")
-			print("ever here1")
 			self._oneExecution()
-			print("ever here2")
 		iterations = 1
 		if max_iterations != 0 and iterations >= max_iterations:
 			log.debug("Maximum number of iterations reached, terminating")
 			return self.execution_return_values
 		while not self._isExplorationComplete():
-			print("ever here3")
 			selected = self.constraints_to_solve.popleft()
 			if selected.processed:
 				continue
@@ -76,10 +73,8 @@ class ExplorationEngine:
 
 			for pred in self.invocation.pre_asserts:
 				asserts.append(pred)
-			print("ever here4")
 			model = self.solver.findCounterexample(asserts, query)
-			#print("model", model)
-			print("ever here5")
+
 			if model == None:
 				continue
 			else:

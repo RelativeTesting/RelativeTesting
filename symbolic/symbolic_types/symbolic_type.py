@@ -110,15 +110,16 @@ class SymbolicObject(SymbolicType,object):
 
 	def __bool__(self):
 		ret = bool(self.getConcrValue())
+		if self.getConcrValue() == "0":
+			ret = False
 		#print("smart move", self)
 		if SymbolicObject.SI != None:
-			print("again", type(self), self, ret)
+			#print("again", type(self).__name__, self, ret)
 			SymbolicObject.SI.whichBranch(ret,self)
 		return ret
 
 	# compute both the symbolic and concrete image of operator
 	def _do_bin_op(self, other, fun, op, wrap):
-		#print("op is", op)
 		return self._do_sexpr([self,other], fun, op, wrap)
 
 	def __eq__(self, other):

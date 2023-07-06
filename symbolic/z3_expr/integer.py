@@ -3,7 +3,10 @@ from .expression import Z3Expression
 
 class Z3Integer(Z3Expression):
 	def _isIntVar(self,v):
-		return isinstance(v,IntRef)
+		return isinstance(v,IntNumRef)
+	
+	def _isStrVar(self,v):
+		return isinstance(v, StringVal)
 
 	def _variable(self,name,solver):
 		return Int(name,solver.ctx)

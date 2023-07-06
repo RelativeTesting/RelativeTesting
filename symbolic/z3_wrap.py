@@ -7,6 +7,7 @@ import logging
 from z3 import *
 from .z3_expr.integer import Z3Integer
 from .z3_expr.bitvector import Z3BitVector
+from .z3_expr.string import Z3String
 
 log = logging.getLogger("se.z3")
 
@@ -23,7 +24,8 @@ class Z3Wrapper(object):
 	  	 asserts remains valid."""
 		self.solver = Solver()
 		self.query = query
-		self.asserts = self._coneOfInfluence(asserts,query)
+		#self.asserts = self._coneOfInfluence(asserts,query)
+		self.asserts = asserts
 		res = self._findModel()
 		log.debug("Query -- %s" % self.query)
 		log.debug("Asserts -- %s" % asserts)
@@ -50,13 +52,11 @@ class Z3Wrapper(object):
 		return cone
 
 	def _findModel(self):
-		# Try QF_LIA first (as it may fairly easily recognize unsat instances)
 		if self.use_lia:
 			self.solver.push()
 			self.z3_expr = Z3Integer()
-			self.z3_expr.toZ3(self.solver,self.asserts,self.query)
+			self.z3_expr.toZ3(self.solver,self.asserts,self.query)			
 			res = self.solver.check()
-			#print(self.solver.assertions)
 			self.solver.pop()
 			if res == unsat:
 				return None
@@ -72,18 +72,17 @@ class Z3Wrapper(object):
 			self.solver.pop()
 			self.N = self.N+8
 			if self.N <= 64: print("expanded bit width to "+str(self.N)) 
-		#print("Assertions")
-		#print(self.solver.assertions())
 		if ret == unsat:
 			res = None
 		elif ret == unknown:
 			res = None
-		elif not mismatch:
+		elif not mismatch or ret == sat:
 			res = self._getModel()
 		else:
 			res = None
 		if self.N<=64: self.solver.pop()
 		return res
+
 
 	def _setAssertsQuery(self):
 		self.z3_expr = Z3BitVector(self.N)
@@ -104,8 +103,7 @@ class Z3Wrapper(object):
 		if res == sat:
 			# Does concolic agree with Z3? If not, it may be due to overflow
 			model = self._getModel()
-			#print("Match?")
-			#print(self.solver.assertions)
+			print("model", model)
 			self.solver.pop()
 			mismatch = False
 			for a in self.asserts:
@@ -114,7 +112,8 @@ class Z3Wrapper(object):
 					mismatch = True
 					break
 			if (not mismatch):
-				mismatch = not (not self.z3_expr.predToZ3(self.query,self.solver,model))
+				a = self.z3_expr.predToZ3(self.query,self.solver,model)
+				mismatch = not (not a)
 			#print(mismatch)
 			return (res,mismatch)
 		elif res == unknown:
@@ -124,16 +123,84 @@ class Z3Wrapper(object):
 	def _getModel(self):
 		res = {}
 		model = self.solver.model()
+		print("KEYS ARE", self.z3_expr.z3_vars)
 		for name in self.z3_expr.z3_vars.keys():
 			try:
 				ce = model.eval(self.z3_expr.z3_vars[name])
-				res[name] = ce.as_signed_long()
+				if isinstance(self.z3_expr.z3_vars[name], SeqRef):
+					res[name] = ce.as_string()
+				elif isinstance(self.z3_expr.z3_vars[name], ArithRef):
+					res[name] = ce.as_long()
 			except:
 				pass
 		return res
-	
+
 	def _boundIntegers(self,vars,val):
 		bval = BitVecVal(val,self.N,self.solver.ctx)
 		bval_neg = BitVecVal(-val-1,self.N,self.solver.ctx)
 		return And([ v <= bval for v in vars]+[ bval_neg <= v for v in vars])
 
+
+	# def _getModel(self):
+	# 	res = {}
+	# 	model = self.solver.model()
+	# 	for name in self.z3_expr.z3_vars.keys():
+	# 		try:
+	# 			ce = model.eval(self.z3_expr.z3_vars[name])
+	# 			res[name] = ce.as_signed_long()
+	# 			#res[name] = ce.as_string()
+	# 		except:
+	# 			pass
+	# 	return res
+
+
+	# def _findModelString(self):
+	# 	if self.use_lia:
+	# 		self.solver.push()
+	# 		self.z3_expr = Z3String()
+	# 		self.z3_expr.toZ3(self.solver,self.asserts,self.query)			
+	# 		res = self.solver.check()
+	# 		self.solver.pop()
+	# 		if res == unsat:
+	# 			return None
+		
+	# 	(ret, mismatch) = self._findModel2string()
+	# 	if ret == unsat:
+	# 		res = None
+	# 	elif ret == unknown:
+	# 		res = None
+	# 	elif not mismatch:
+	# 		res = self._getModel()
+	# 	else:
+	# 		res = None
+	# 	return res
+		
+	# 	(ret, mismatch) = self._findModel2string()
+	# def _findModel2string(self):
+	# 	self.z3_expr.toZ3(self.solver,self.asserts,self.query)
+	# 	print("solver ", self.solver.assertions())
+	# 	res = unsat
+	# 	self.solver.push()		
+	# 	res = self.solver.check()
+
+	# 	if res == sat:
+	# 		ans = {}
+	# 		#print("solver ", self.solver.assertions())
+	# 		model = self.solver.model()
+	# 		print("model", model)
+	# 		for name in self.z3_expr.z3_vars.keys():
+	# 			try:
+	# 				ce = model.eval(self.z3_expr.z3_vars[name])
+	# 				ans[name] = ce
+	# 			except:
+	# 				pass
+	# 		return (ans,False)
+	# 	return (res,False)
+
+	# def _findModel(self):
+	# # Try QF_LIA first (as it may fairly easily recognize unsat instances)
+	# type_name = "Z3Integer"
+	# if type_name == "Z3Integer":
+	# 	return self._findModelInt()
+	# elif type_name == "Z3String":
+	# 	return self._findModelString()

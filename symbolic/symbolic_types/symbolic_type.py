@@ -53,6 +53,7 @@ class SymbolicType(object):
 		args = zip(inspect.getfullargspec(fun).args, [ c for (c,s) in unwrapped ])
 		concrete = fun(**dict([a for a in args]))
 		symbolic = [ op ] + [ s for c,s in unwrapped ]
+		#print("wrap", wrap(concrete,symbolic), "unwrapped", unwrapped, "args",args, "symbolic",symbolic)
 		return wrap(concrete,symbolic)
 
 	def symbolicEq(self, other):
@@ -109,7 +110,11 @@ class SymbolicObject(SymbolicType,object):
 
 	def __bool__(self):
 		ret = bool(self.getConcrValue())
+		if self.getConcrValue() == "0":
+			ret = False
+		#print("smart move", self)
 		if SymbolicObject.SI != None:
+			#print("again", type(self).__name__, self, ret)
 			SymbolicObject.SI.whichBranch(ret,self)
 		return ret
 

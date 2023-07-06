@@ -20,11 +20,21 @@ class ExplorationEngine:
 		for n in funcinv.getNames():
 			self.symbolic_inputs[n] = funcinv.createArgumentValue(n)
 
+		
+		#print("init input", self.symbolic_inputs)
 		self.constraints_to_solve = deque([])
 		self.num_processed_constraints = 0
 
 		self.path = PathToConstraint(lambda c : self.addConstraint(c))
 		# link up SymbolicObject to PathToConstraint in order to intercept control-flow
+
+		if funcinv.pre_constraints != []:
+			for c in funcinv.pre_constraints:
+				b = self.path.current_constraint.addChild(c.predicate)
+				self.addConstraint(b)
+				break
+
+
 		symbolic_type.SymbolicObject.SI = self.path
 
 		if solver == "z3":
@@ -45,13 +55,13 @@ class ExplorationEngine:
 		constraint.inputs = self._getInputs()
 
 	def explore(self, max_iterations=0):
-		self._oneExecution()
-		
+		if self._isExplorationComplete():
+			log.debug("Exploration without symbolic assertions")
+			self._oneExecution()
 		iterations = 1
 		if max_iterations != 0 and iterations >= max_iterations:
 			log.debug("Maximum number of iterations reached, terminating")
 			return self.execution_return_values
-
 		while not self._isExplorationComplete():
 			selected = self.constraints_to_solve.popleft()
 			if selected.processed:
@@ -60,6 +70,9 @@ class ExplorationEngine:
 
 			log.info("Selected constraint %s" % selected)
 			asserts, query = selected.getAssertsAndQuery()
+
+			for pred in self.invocation.pre_asserts:
+				asserts.append(pred)
 			model = self.solver.findCounterexample(asserts, query)
 
 			if model == None:
@@ -77,6 +90,8 @@ class ExplorationEngine:
 				log.info("Maximum number of iterations reached, terminating")
 				break
 
+	
+		print("self.generated", self.generated_inputs)
 		return self.generated_inputs, self.execution_return_values, self.path
 
 	# private
@@ -92,6 +107,7 @@ class ExplorationEngine:
 
 	def _isExplorationComplete(self):
 		num_constr = len(self.constraints_to_solve)
+		#print("num_cons", num_constr)
 		if num_constr == 0:
 			log.info("Exploration complete")
 			return True
@@ -109,12 +125,13 @@ class ExplorationEngine:
 		args = self.symbolic_inputs
 		inputs = [ (k,self._getConcrValue(args[k])) for k in args ]
 		self.generated_inputs.append(inputs)
-		print(inputs)
+		#print(inputs)
 		
 	def _oneExecution(self,expected_path=None):
 		self._recordInputs()
 		self.path.reset(expected_path)
+		#print("sym in", self.symbolic_inputs)
 		ret = self.invocation.callFunction(self.symbolic_inputs)
-		print(ret)
+		#print(ret, "hello")
 		self.execution_return_values.append(ret)
 

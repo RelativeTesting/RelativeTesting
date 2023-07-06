@@ -1,6 +1,7 @@
 import utils
 
 from symbolic.symbolic_types.symbolic_int import SymbolicInteger
+from symbolic.symbolic_types.symbolic_str import SymbolicStr
 from symbolic.symbolic_types.symbolic_type import SymbolicType
 from z3 import *
 
@@ -12,6 +13,7 @@ class Z3Expression(object):
 		self.z3_vars = {}
 		solver.assert_exprs([self.predToZ3(p,solver) for p in asserts])
 		solver.assert_exprs(Not(self.predToZ3(query,solver)))
+		
 
 	def predToZ3(self,pred,solver,env=None):
 		sym_expr = self._astToZ3Expr(pred.symtype,solver,env)
@@ -32,11 +34,24 @@ class Z3Expression(object):
 
 	def _isIntVar(self, v):
 		raise NotImplementedException
+	
+	def _isStringVar(self, v):
+		raise NotImplementedException
 
-	def _getIntegerVariable(self,name,solver):
+	def _getVariable(self,expr,solver):
+		name = expr.name
 		if name not in self.z3_vars:
-			self.z3_vars[name] = self._variable(name,solver)
+			if isinstance(expr, SymbolicInteger):
+				self.z3_vars[name] = self._variable(name,solver)
+			elif isinstance(expr, SymbolicStr):
+				self.z3_vars[name] = String(name,solver.ctx)
 		return self.z3_vars[name]
+
+	def _getConstant(self,expr,solver):
+		if isinstance(expr, int):
+			return self._constant(expr,solver)
+		elif isinstance(expr, str):
+			return StringVal(expr,solver.ctx)
 
 	def _variable(self,name,solver):
 		raise NotImplementedException
@@ -52,6 +67,8 @@ class Z3Expression(object):
 
 	# add concrete evaluation to this, to check
 	def _astToZ3Expr(self,expr,solver,env=None):
+		#print("_astToZ3Expr", type(expr).__name__, expr.val, expr.name, expr.expr)
+		print("expression is", type(expr).__name__, expr)
 		if isinstance(expr, list):
 			op = expr[0]
 			args = [ self._astToZ3Expr(a,solver,env) for a in expr[1:] ]
@@ -97,10 +114,10 @@ class Z3Expression(object):
 			else:
 				utils.crash("Unknown BinOp during conversion from ast to Z3 (expressions): %s" % op)
 
-		elif isinstance(expr, SymbolicInteger):
+		elif isinstance(expr, SymbolicInteger) or isinstance(expr, SymbolicStr):
 			if expr.isVariable():
-				if env == None:
-					return self._getIntegerVariable(expr.name,solver)
+				if env == None or expr.name not in env:
+					return self._getVariable(expr,solver)
 				else:
 					return env[expr.name]
 			else:
@@ -110,9 +127,9 @@ class Z3Expression(object):
 			utils.crash("{} is an unsupported SymbolicType of {}".
 						format(expr, type(expr)))
 
-		elif isinstance(expr, int):
+		elif isinstance(expr, int) or isinstance(expr, str):
 			if env == None:
-				return self._constant(expr,solver)
+				return self._getConstant(expr,solver)
 			else:
 				return expr
 		else:

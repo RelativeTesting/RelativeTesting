@@ -23,6 +23,7 @@ parser.add_option("--cvc", dest="cvc", action="store_true", help="Use the CVC SM
 parser.add_option("--z3", dest="cvc", action="store_false", help="Use the Z3 SMT solver")
 (options, args) = parser.parse_args()
 
+
 if len(args) == 0 or not os.path.exists(args[0]):
     parser.error("Please supply directory of tests")
     sys.exit(1)
@@ -35,13 +36,14 @@ if not os.path.isdir(test_dir):
 
 files = [ f for f in os.listdir(test_dir) if re.search(".py$",f) ]
 
+
 failed = []
 for f in files:
 	# execute the python runner for this test
         full = os.path.join(test_dir, f)
         with open(os.devnull, 'w') as devnull:
             solver = "--cvc" if options.cvc else "--z3"
-            ret = subprocess.call([sys.executable, "pyexz3.py", "--m=25", solver, full], stdout=devnull)
+            ret = subprocess.call([sys.executable, "pyexz3.py", "--m=25", solver, full])
         if (ret == 0):
             myprint(bcolors.SUCCESS, "✓", "Test " + f + " passed.")
         else:

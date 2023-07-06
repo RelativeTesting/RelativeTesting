@@ -5,7 +5,10 @@ class Z3String(Z3Expression):
 
 
     def _isIntVar(self,v):
-        return isinstance(v,str)
+        return isinstance(v,IntNumRef)
+    
+    def _isStrVar(self,v):
+        return isinstance(v, StringVal)
     
     def _variable(self,name,solver):
         return String(name,solver.ctx)

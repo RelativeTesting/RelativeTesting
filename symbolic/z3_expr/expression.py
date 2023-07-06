@@ -38,10 +38,20 @@ class Z3Expression(object):
 	def _isStringVar(self, v):
 		raise NotImplementedException
 
-	def _getVariable(self,name,solver):
+	def _getVariable(self,expr,solver):
+		name = expr.name
 		if name not in self.z3_vars:
-			self.z3_vars[name] = self._variable(name,solver)
+			if isinstance(expr, SymbolicInteger):
+				self.z3_vars[name] = self._variable(name,solver)
+			elif isinstance(expr, SymbolicStr):
+				self.z3_vars[name] = String(name,solver.ctx)
 		return self.z3_vars[name]
+
+	def _getConstant(self,expr,solver):
+		if isinstance(expr, int):
+			return self._constant(expr,solver)
+		elif isinstance(expr, str):
+			return StringVal(expr,solver.ctx)
 
 	def _variable(self,name,solver):
 		raise NotImplementedException
@@ -106,8 +116,8 @@ class Z3Expression(object):
 
 		elif isinstance(expr, SymbolicInteger) or isinstance(expr, SymbolicStr):
 			if expr.isVariable():
-				if env == None:
-					return self._getVariable(expr.name,solver)
+				if env == None or expr.name not in env:
+					return self._getVariable(expr,solver)
 				else:
 					return env[expr.name]
 			else:
@@ -119,7 +129,7 @@ class Z3Expression(object):
 
 		elif isinstance(expr, int) or isinstance(expr, str):
 			if env == None:
-				return self._constant(expr,solver)
+				return self._getConstant(expr,solver)
 			else:
 				return expr
 		else:

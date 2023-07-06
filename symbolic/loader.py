@@ -158,7 +158,7 @@ class Loader:
 		constraint_line = constraint_line.replace(" ", "")
 		val = constraint_line.replace(f, "")
 		correct_op = ""
-		ops = ["==", "!=", "<", ">", "<=", ">="]
+		ops = ["==", "!=", ">=", "<=", "<", ">"]
 		for op in ops:
 			if op in constraint_line:
 				val = val.replace(op, "")

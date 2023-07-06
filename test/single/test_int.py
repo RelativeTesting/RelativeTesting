@@ -1,10 +1,9 @@
 from symbolic.args import *
 
-@types(x="int", y="int")
-@symbolic(x="@ x != 0")
+@symbolic(x="@ x >=  y")
 def test_int(x, y):
-    if x == 3:
+    if x == 1:
         return 1
-    if y == 4:
+    if y > 2:
         return 2
-    return 3    
+    return 3

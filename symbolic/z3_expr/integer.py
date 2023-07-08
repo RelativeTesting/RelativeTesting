@@ -3,7 +3,8 @@ from .expression import Z3Expression
 
 class Z3Integer(Z3Expression):
 	def _isIntVar(self,v):
-		return isinstance(v,IntNumRef)
+		#return isinstance(v,IntNumRef)
+		return isinstance(v,ArithRef)
 	
 	def _isStrVar(self,v):
 		return isinstance(v, StringVal)

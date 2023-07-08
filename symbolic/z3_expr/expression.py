@@ -19,12 +19,15 @@ class Z3Expression(object):
 		sym_expr = self._astToZ3Expr(pred.symtype,solver,env)
 		if env == None:
 			if not is_bool(sym_expr):
-				sym_expr = sym_expr != self._constant(0,solver)
+				sym_expr = sym_expr != self._getConstant(0,solver)
 			if not pred.result:
 				sym_expr = Not(sym_expr)
 		else:
 			if not pred.result:
-				sym_expr = not sym_expr
+				if not is_bool(sym_expr):
+					sym_expr = not sym_expr
+				else:
+					sym_expr = Not(sym_expr)
 		return sym_expr
 
 	def getIntVars(self):
@@ -67,9 +70,8 @@ class Z3Expression(object):
 
 	# add concrete evaluation to this, to check
 	def _astToZ3Expr(self,expr,solver,env=None):
-		#print("_astToZ3Expr", type(expr).__name__, expr.val, expr.name, expr.expr)
 		print("expression is", type(expr).__name__, expr)
-		if isinstance(expr, list):
+		if isinstance(expr, list) and len(expr) == 3:
 			op = expr[0]
 			args = [ self._astToZ3Expr(a,solver,env) for a in expr[1:] ]
 			z3_l,z3_r = args[0],args[1]
@@ -113,6 +115,16 @@ class Z3Expression(object):
 				return self._wrapIf(z3_l >= z3_r,solver,env)
 			else:
 				utils.crash("Unknown BinOp during conversion from ast to Z3 (expressions): %s" % op)
+		
+		elif isinstance(expr, list) and len(expr) == 2:
+			op = expr[0]
+			arg =  self._astToZ3Expr(expr[1],solver,env)
+			#print("come here", "expression is", type(expr).__name__, expr)
+			#print("op", op, "arg", arg, "type", type(arg).__name__)
+			tmp =  self._getConstant(expr[1], solver)
+			#print("deneme", tmp, type(tmp).__name__, "type expr1", type(expr[1]).__name__)
+			if op == "str.len":
+				return Length(arg)
 
 		elif isinstance(expr, SymbolicInteger) or isinstance(expr, SymbolicStr):
 			if expr.isVariable():

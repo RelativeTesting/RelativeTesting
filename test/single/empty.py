@@ -1,22 +1,29 @@
-import z3 
-x = z3.String('x')
-y = z3.String('y')
+from z3 import *
+x = String('x')
+y = String('y')
 
-z = z3.Int('z')
+# z = Int('z')
 
-s = z3.Solver()
+s = Solver()
 
-s.add(z3.Length(x) < z)
-s.add(z3.Length(y) == 3)
+cons1 = Not(If(x == StringVal("bbbb"), True, False) )
+cons =Not(If(y < StringVal("as"), True, False))
 
-s.add(z3.IndexOf(x, y, 0) == 0)
-s.add(z3.Contains(x, "a*a"))
+s.assert_exprs([cons1, cons])
+#s.add(Length(x) < z)#
+#s.add(Length(y) == 3)
 
+#s.add(IndexOf(x, y, 0) == 0)
+#s.add(Contains(x, "a*a"))
 
+print(s.assertions())
 print(s.check())
 
 m = s.model()
-
+print(m)
 print("x", m[x])
 print("y", m[y])
-print("z", m[z])
+# print("z", m[z])
+
+
+

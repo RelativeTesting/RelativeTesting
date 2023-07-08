@@ -76,53 +76,15 @@ class Z3Expression(object):
 			args = [ self._astToZ3Expr(a,solver,env) for a in expr[1:] ]
 			z3_l,z3_r = args[0],args[1]
 
-			# arithmetical operations
-			if op == "+":
-				return self._add(z3_l, z3_r, solver)
-			elif op == "-":
-				return self._sub(z3_l, z3_r, solver)
-			elif op == "*":
-				return self._mul(z3_l, z3_r, solver)
-			elif op == "//":
-				return self._div(z3_l, z3_r, solver)
-			elif op == "%":
-				return self._mod(z3_l, z3_r, solver)
-
-			# bitwise
-			elif op == "<<":
-				return self._lsh(z3_l, z3_r, solver)
-			elif op == ">>":
-				return self._rsh(z3_l, z3_r, solver)
-			elif op == "^":
-				return self._xor(z3_l, z3_r, solver)
-			elif op == "|":
-				return self._or(z3_l, z3_r, solver)
-			elif op == "&":
-				return self._and(z3_l, z3_r, solver)
-
-			# equality gets coerced to integer
-			elif op == "==":
-				return self._wrapIf(z3_l == z3_r,solver,env)
-			elif op == "!=":
-				return self._wrapIf(z3_l != z3_r,solver,env)
-			elif op == "<":
-				return self._wrapIf(z3_l < z3_r,solver,env)
-			elif op == ">":
-				return self._wrapIf(z3_l > z3_r,solver,env)
-			elif op == "<=":
-				return self._wrapIf(z3_l <= z3_r,solver,env)
-			elif op == ">=":
-				return self._wrapIf(z3_l >= z3_r,solver,env)
-			else:
-				utils.crash("Unknown BinOp during conversion from ast to Z3 (expressions): %s" % op)
+			return self._opToZ3Expr(op,z3_l,z3_r,solver,env)
 		
 		elif isinstance(expr, list) and len(expr) == 2:
 			op = expr[0]
 			arg =  self._astToZ3Expr(expr[1],solver,env)
-			#print("come here", "expression is", type(expr).__name__, expr)
-			#print("op", op, "arg", arg, "type", type(arg).__name__)
+			print("come here", "expression is", type(expr).__name__, expr)
+			print("op", op, "arg", arg, "type", type(arg).__name__)
 			tmp =  self._getConstant(expr[1], solver)
-			#print("deneme", tmp, type(tmp).__name__, "type expr1", type(expr[1]).__name__)
+			print("deneme", tmp, type(tmp).__name__, "type expr1", type(expr[1]).__name__)
 			if op == "str.len":
 				return Length(arg)
 
@@ -146,6 +108,60 @@ class Z3Expression(object):
 				return expr
 		else:
 			utils.crash("Unknown node during conversion from ast to Z3 (expressions): %s" % expr)
+
+
+	def _opToZ3Expr(self,op,z3_l,z3_r,solver, env=None):
+		# arithmetical operations
+		if op == "+":
+			return self._add(z3_l, z3_r, solver)
+		elif op == "-":
+			return self._sub(z3_l, z3_r, solver)
+		elif op == "*":
+			return self._mul(z3_l, z3_r, solver)
+		elif op == "//":
+			return self._div(z3_l, z3_r, solver)
+		elif op == "%":
+			return self._mod(z3_l, z3_r, solver)
+
+		# bitwise
+		elif op == "<<":
+			return self._lsh(z3_l, z3_r, solver)
+		elif op == ">>":
+			return self._rsh(z3_l, z3_r, solver)
+		elif op == "^":
+			return self._xor(z3_l, z3_r, solver)
+		elif op == "|":
+			return self._or(z3_l, z3_r, solver)
+		elif op == "&":
+			return self._and(z3_l, z3_r, solver)
+
+		# equality gets coerced to integer
+		elif op == "==":
+			return self._wrapIf(z3_l == z3_r,solver,env)
+		elif op == "!=":
+			return self._wrapIf(z3_l != z3_r,solver,env)
+		elif op == "<":
+
+			return self._wrapIf(z3_l < z3_r,solver,env)
+		elif op == ">":
+			return self._wrapIf(z3_l > z3_r,solver,env)
+		elif op == "<=":
+			return self._wrapIf(z3_l <= z3_r,solver,env)
+		elif op == ">=":
+			return self._wrapIf(z3_l >= z3_r,solver,env)
+		
+
+		# string operations
+
+		elif op == "getitem":
+			return SubString(z3_l,z3_r, 1)
+
+
+		else:
+			utils.crash("Unknown BinOp during conversion from ast to Z3 (expressions): %s" % op)	
+
+
+
 
 	def _add(self, l, r, solver):
 		return l + r

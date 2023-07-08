@@ -81,6 +81,7 @@ class Z3Wrapper(object):
 	def _findModel2(self):
 		self._setAssertsQuery()
 		
+		print("solver", self.solver.assertions())
 		res = unsat
 		res = self.solver.check()
 		if res == sat:

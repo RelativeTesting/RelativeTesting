@@ -17,9 +17,11 @@ def test_int(x, y, z):
     if z == 5:
         return 3
     
-    # if len(y) >= 2:
-    #     if y[0] == 'a':
-    #         return 4
+    if len(y) > 2:
+        if y[2] == 'a':
+            return 4
+        
+        return 7
 
    
     return 6

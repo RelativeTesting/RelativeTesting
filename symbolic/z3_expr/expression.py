@@ -36,10 +36,10 @@ class Z3Expression(object):
 	# ----------- private ---------------
 
 	def _isIntVar(self, v):
-		raise NotImplementedException
+		raise  Exception("NotImplementedException")
 	
 	def _isStringVar(self, v):
-		raise NotImplementedException
+		raise Exception("NotImplementedException")
 
 	def _getVariable(self,expr,solver):
 		name = expr.name
@@ -57,10 +57,10 @@ class Z3Expression(object):
 			return StringVal(expr,solver.ctx)
 
 	def _variable(self,name,solver):
-		raise NotImplementedException
+		raise Exception("NotImplementedException")
 
 	def _constant(self,v,solver):
-		raise NotImplementedException
+		raise Exception("NotImplementedException")
 
 	def _wrapIf(self,e,solver,env):
 		if env == None:

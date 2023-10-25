@@ -28,12 +28,6 @@ class ExplorationEngine:
 		self.path = PathToConstraint(lambda c : self.addConstraint(c))
 		# link up SymbolicObject to PathToConstraint in order to intercept control-flow
 
-		if funcinv.pre_constraints != []:
-			for c in funcinv.pre_constraints:
-				b = self.path.current_constraint.addChild(c.predicate)
-				self.addConstraint(b)
-				break
-
 
 		symbolic_type.SymbolicObject.SI = self.path
 
@@ -55,9 +49,17 @@ class ExplorationEngine:
 		constraint.inputs = self._getInputs()
 
 	def explore(self, max_iterations=0):
-		if self._isExplorationComplete():
-			log.debug("Exploration without symbolic assertions")
-			self._oneExecution()
+		if self.invocation.pre_asserts != None and len(self.invocation.pre_asserts) > 0:
+			log.info("Adding pre-asserts")
+			model = self.solver.findCounterexample(None, self.invocation.pre_asserts[0])
+			if model == None:
+				log.info("Pre-asserts are unsatisfiable, terminating")
+				return self.generated_inputs, self.execution_return_values, self.path
+			else:
+				for name in model.keys():
+					self._updateSymbolicParameter(name,model[name])
+
+		self._oneExecution()
 		iterations = 1
 		if max_iterations != 0 and iterations >= max_iterations:
 			log.debug("Maximum number of iterations reached, terminating")
@@ -70,9 +72,7 @@ class ExplorationEngine:
 
 			log.info("Selected constraint %s" % selected)
 			asserts, query = selected.getAssertsAndQuery()
-
-			for pred in self.invocation.pre_asserts:
-				asserts.append(pred)
+			self.solver.addPreAsserts(self.invocation.pre_asserts)
 			model = self.solver.findCounterexample(asserts, query)
 
 			if model == None:

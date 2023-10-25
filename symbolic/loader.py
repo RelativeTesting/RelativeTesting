@@ -8,6 +8,7 @@ from .invocation import FunctionInvocation
 from .symbolic_types import SymbolicInteger, getSymbolic, SymbolicStr
 from .constraint import Constraint
 from .predicate import Predicate
+from .ast_wrap import AstWrapper
 
 # The built-in definition of len wraps the return value in an int() constructor, destroying any symbolic types.
 # By redefining len here we can preserve symbolic integer types.
@@ -72,9 +73,9 @@ class Loader:
 				if not f in argspec.args:
 					print("Error (@symbolic): " +  self._entryPoint + " has no argument named " + f)
 					raise ImportError()
-				# elif f in inv.getNames():
-				# 	print("Argument " + f + " defined in both @concrete and @symbolic")
-				# 	raise ImportError()
+				elif f in inv.getNames():
+					print("Argument " + f + " defined in both @concrete and @symbolic")
+					raise ImportError()
 				else:
 					symbolic_constructor = getSymbolic(v)
 					if (symbolic_constructor == None):
@@ -153,100 +154,16 @@ class Loader:
 		else:
 			print("%s test passed <---" % self._fileName)
 			return True
-		
+	
 	def _annotationHelper(self, constraint_line, inv, f, type_dict, cons_dict, initial_dict):
-		constraint_line = constraint_line.replace(" ", "")
-		val = constraint_line.replace(f, "")
-		correct_op = ""
-		ops = ["==", "!=", ">=", "<=", "<", ">"]
-		for op in ops:
-			if op in constraint_line:
-				val = val.replace(op, "")
-				correct_op = op
-				break
-		
-		expr = []
 		if f in type_dict:
-
-			# if type specified, use it
 			constructor = cons_dict[f]
 			type_func = type_dict[f]
 			initial_val = initial_dict[f]
 	
-			# initialize the variable
-			st = constructor(f, initial_val)
-			expr = [correct_op, st, type_func(val)]
-
-			# create the constraint
-			tmp_val = initial_val + type_func(1)
-			se = constructor("se", tmp_val, expr)
-			pred = Predicate(se, do_op(correct_op, initial_val, type_func(val)))
-			cons = Constraint(None, pred)
-
-			# add the constraint to the invocation
-			inv.addPreConstraint(cons)
-			pred2 = Predicate(se, not do_op(correct_op, initial_val, type_func(val)))
-			inv.addPreAsserts(pred2)
-
-			# initialize the argument in the invocation
-			if f not in inv.getNames():
-				Loader._initializeArgumentSymbolic(inv, f, initial_val, constructor)
-			
-		elif val.isnumeric() or (val[0] == "-" and val[1:].isnumeric()):	 
-			# if no type specified and numeric, use int
-
-			st = SymbolicInteger(f, 0)
-			expr = [correct_op, st, int(val)]
-			se = SymbolicInteger("se", 1, expr)
-
-			pred = Predicate(se, do_op(correct_op, 0, int(val)))
-			cons = Constraint(None, pred)
-
-			inv.addPreConstraint(cons)
-			pred2 = Predicate(se, not do_op(correct_op, 0, int(val)))
-			inv.addPreAsserts(pred2)
-
-			if f not in inv.getNames():
-				Loader._initializeArgumentSymbolic(inv, f, 0, SymbolicInteger)
-
-		elif val[0] == "\"" or val[0] == "'":
-			# if no type specified and string, use string
-
-			st = SymbolicStr(f, "")
-			expr = [correct_op, st, val]
-			se = SymbolicStr("se", "", expr)
-
-			pred = Predicate(se, do_op(correct_op, "", val))
-			cons = Constraint(None, pred)
-
-			inv.addPreConstraint(cons)
-			pred2 = Predicate(se, not do_op(correct_op, "", val))
-			inv.addPreAsserts(pred2)
-
-			if f not in inv.getNames():
-				Loader._initializeArgumentSymbolic(inv, f, "", SymbolicStr)
-
-
-		elif val[0] != "\"" and val[0] != "'":
-			# if no type specified and not numeric and not string, use int
-
-			left = SymbolicInteger(f, 0)
-			right = SymbolicInteger(val, 0)
-			expr = [correct_op, left, right]
-			
-			se = SymbolicInteger("se", 1, expr)
-			pred = Predicate(se, do_op(correct_op, 0, 0))
-			cons = Constraint(None, pred)
-			inv.addPreConstraint(cons)
-
-			pred2 = Predicate(se, not do_op(correct_op, 0, 0))
-			inv.addPreAsserts(pred2)
-			if val not in inv.getNames():
-				Loader._initializeArgumentSymbolic(inv, val, 0, SymbolicInteger)
-
-			if f not in inv.getNames():
-				Loader._initializeArgumentSymbolic(inv, f, 0, SymbolicInteger)
-		
+			annotation_constraint = AstWrapper(constraint_line, f, constructor, initial_val, type_func)
+			predicate = annotation_constraint.find_constraint()
+			inv.addPreAsserts(predicate)
 
 	
 def loaderFactory(filename,entry):
@@ -261,7 +178,6 @@ def loaderFactory(filename,entry):
 	except ImportError:
 		sys.path = sys.path[1:]
 		return None
-
 
 def do_op(op, left, right):
 	match op:

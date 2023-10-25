@@ -3,6 +3,7 @@ import utils
 from symbolic.symbolic_types.symbolic_int import SymbolicInteger
 from symbolic.symbolic_types.symbolic_str import SymbolicStr
 from symbolic.symbolic_types.symbolic_type import SymbolicType
+from ..predicate import Predicate
 from z3 import *
 
 class Z3Expression(object):
@@ -11,8 +12,13 @@ class Z3Expression(object):
 
 	def toZ3(self,solver,asserts,query):
 		self.z3_vars = {}
-		solver.assert_exprs([self.predToZ3(p,solver) for p in asserts])
-		solver.assert_exprs(Not(self.predToZ3(query,solver)))
+
+		if asserts != None:
+			solver.assert_exprs([self.predToZ3(p,solver) for p in asserts])
+		
+		if query != None:
+			solver.assert_exprs(Not(self.predToZ3(query,solver)))
+		#solver.assert_exprs(Not(self.predToZ3(query,solver)))
 		
 
 	def predToZ3(self,pred,solver,env=None):
@@ -64,14 +70,16 @@ class Z3Expression(object):
 
 	def _wrapIf(self,e,solver,env):
 		if env == None:
-			return If(e,self._constant(1,solver),self._constant(0,solver))
+			return If(e,True,False)
 		else:
 			return e
 
 	# add concrete evaluation to this, to check
 	def _astToZ3Expr(self,expr,solver,env=None):
 		print("expression is", type(expr).__name__, expr)
-		if isinstance(expr, list) and len(expr) == 3:
+		if isinstance(expr, Predicate):
+			return self._astToZ3Expr(expr.symtype,solver,env)
+		elif isinstance(expr, list) and len(expr) == 3:
 			op = expr[0]
 			args = [ self._astToZ3Expr(a,solver,env) for a in expr[1:] ]
 			z3_l,z3_r = args[0],args[1]
@@ -109,6 +117,9 @@ class Z3Expression(object):
 		else:
 			utils.crash("Unknown node during conversion from ast to Z3 (expressions): %s" % expr)
 
+	def preAssertsToZ3(self,pre_asserts,solver):
+		sym_expr = [ self._astToZ3Expr(p.symtype,solver) for p in pre_asserts ]
+		return sym_expr
 
 	def _opToZ3Expr(self,op,z3_l,z3_r,solver, env=None):
 		# arithmetical operations

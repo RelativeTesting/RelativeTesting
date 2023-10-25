@@ -18,6 +18,7 @@ class Z3Wrapper(object):
 		self.query = None
 		self.use_lia = True
 		self.z3_expr = None
+		self.pre_asserts = None
 
 	def findCounterexample(self, asserts, query):
 		"""Tries to find a counterexample to the query while
@@ -55,6 +56,11 @@ class Z3Wrapper(object):
 		if self.use_lia:
 			self.solver.push()
 			self.z3_expr = Z3Integer()
+			
+			if self.pre_asserts != None:
+				pre_asserts = self.z3_expr.preAssertsToZ3(self.pre_asserts, self.solver)
+				self.solver.assert_exprs(pre_asserts)
+
 			self.z3_expr.toZ3(self.solver,self.asserts,self.query)			
 			res = self.solver.check()
 			self.solver.pop()
@@ -79,6 +85,9 @@ class Z3Wrapper(object):
 		self.z3_expr.toZ3(self.solver,self.asserts,self.query)
 
 	def _findModel2(self):
+		if self.pre_asserts != None:
+			pre_asserts = self.z3_expr.preAssertsToZ3(self.pre_asserts, self.solver)
+			self.solver.assert_exprs(pre_asserts)
 		self._setAssertsQuery()
 		
 		print("solver", self.solver.assertions())
@@ -89,12 +98,13 @@ class Z3Wrapper(object):
 			model = self._getModel()
 			print("model", model)
 			mismatch = False
-			for a in self.asserts:
-				eval = self.z3_expr.predToZ3(a,self.solver,model)
-				if (not is_bool(eval) and not eval):
-					mismatch = True
-					break
-			if (not mismatch):
+			if self.asserts != None:
+				for a in self.asserts:
+					eval = self.z3_expr.predToZ3(a,self.solver,model)
+					if (not is_bool(eval) and not eval):
+						mismatch = True
+						break
+			if ((not mismatch) and (self.query != None)):
 				a = self.z3_expr.predToZ3(self.query,self.solver,model)
 				if not is_bool(a):
 					mismatch = not (not a)
@@ -118,6 +128,9 @@ class Z3Wrapper(object):
 				pass
 		return res
 
+	def addPreAsserts(self, pre_asserts):
+		self.pre_asserts = pre_asserts
+		
 	# def _boundIntegers(self,vars,val):
 	# 	bval = BitVecVal(val,self.N,self.solver.ctx)
 	# 	bval_neg = BitVecVal(-val-1,self.N,self.solver.ctx)

@@ -32,9 +32,7 @@ class Z3Integer(Z3Expression):
 		return xor_fun(l, r)
 
 	def _or(self, l, r, solver):
-		or_fun = Function('int_or', IntSort(), IntSort(), IntSort())
-		return or_fun(l, r)
+		return Or(l, r)
 
 	def _and(self, l, r, solver):
-		and_fun = Function('int_and', IntSort(), IntSort(), IntSort())
-		return and_fun(l, r)
+		return And(l, r)

@@ -1,0 +1,260 @@
+<?xml version="1.0" ?>
+<quiz>
+	
+
+  
+	<question type="coderunner">
+		
+    
+		<name>
+			
+      
+			<text/>
+			
+    
+		</name>
+		
+    
+		<questiontext format="html">
+			
+      
+			<text/>
+			
+    
+		</questiontext>
+		
+    
+		<generalfeedback format="html">
+			
+      
+			<text/>
+			
+    
+		</generalfeedback>
+		
+    
+		<defaultgrade>1</defaultgrade>
+		
+    
+		<penalty>0</penalty>
+		
+    
+		<hidden>0</hidden>
+		
+    
+		<idnumber/>
+		
+    
+		<coderunnertype>python3</coderunnertype>
+		
+    
+		<prototypetype>0</prototypetype>
+		
+    
+		<allornothing>1</allornothing>
+		
+    
+		<penaltyregime>0, 10, 20, ...</penaltyregime>
+		
+    
+		<precheck>0</precheck>
+		
+    
+		<hidecheck>0</hidecheck>
+		
+    
+		<showsource>0</showsource>
+		
+    
+		<answerboxlines>5</answerboxlines>
+		
+    
+		<answerboxcolumns>100</answerboxcolumns>
+		
+    
+		<answerpreload/>
+		
+    
+		<globalextra/>
+		
+    
+		<useace/>
+		
+    
+		<resultcolumns/>
+		
+    
+		<template>{{ STUDENT_ANSWER }}
+
+__student_answer__ = &quot;&quot;&quot;{{ STUDENT_ANSWER | e('py') }}&quot;&quot;&quot;
+
+SEPARATOR = &quot;#&lt;ab@17943918#@&gt;#&quot;
+
+{% for TEST in TESTCASES %}
+print(repr({{ TEST.testcode }}))
+{% if not loop.last %}
+print(SEPARATOR)
+{% endif %}
+{% endfor %}</template>
+		
+    
+		<iscombinatortemplate/>
+		
+    
+		<allowmultiplestdins/>
+		
+    
+		<answer/>
+		
+    
+		<validateonsave>1</validateonsave>
+		
+    
+		<testsplitterre/>
+		
+    
+		<language/>
+		
+    
+		<acelang/>
+		
+    
+		<sandbox/>
+		
+    
+		<grader/>
+		
+    
+		<cputimelimitsecs/>
+		
+    
+		<memlimitmb/>
+		
+    
+		<sandboxparams/>
+		
+    
+		<templateparams/>
+		
+    
+		<hoisttemplateparams>0</hoisttemplateparams>
+		
+    
+		<templateparamslang>twig</templateparamslang>
+		
+    
+		<templateparamsevalpertry>0</templateparamsevalpertry>
+		
+    
+		<templateparamsevald>{}</templateparamsevald>
+		
+    
+		<twigall>0</twigall>
+		
+    
+		<uiplugin/>
+		
+    
+		<uiparameters/>
+		
+    
+		<attachments>0</attachments>
+		
+    
+		<attachmentsrequired>0</attachmentsrequired>
+		
+    
+		<maxfilesize>0</maxfilesize>
+		
+    
+		<filenamesregex/>
+		
+    
+		<filenamesexplain/>
+		
+    
+		<displayfeedback>0</displayfeedback>
+		
+    
+		<giveupallowed>0</giveupallowed>
+		
+    
+		<prototypeextra/>
+		
+    
+		<testcases>
+			<testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+				<testcode>
+					<text>sqr(-3)</text>
+				</testcode>
+				<expected>
+					<text>9</text>
+				</expected>
+				<extra>
+					<text/>
+				</extra>
+				<display>
+					<text>SHOW</text>
+				</display>
+			</testcase>
+			<testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+				<testcode>
+					<text>sqr(11)</text>
+				</testcode>
+				<expected>
+					<text>121</text>
+				</expected>
+				<extra>
+					<text/>
+				</extra>
+				<display>
+					<text>SHOW</text>
+				</display>
+			</testcase>
+			<testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+				<testcode>
+					<text>sqr(-4)</text>
+				</testcode>
+				<expected>
+					<text>16</text>
+				</expected>
+				<extra>
+					<text/>
+				</extra>
+				<display>
+					<text>SHOW</text>
+				</display>
+			</testcase>
+			<testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+				<testcode>
+					<text>sqr(0)</text>
+				</testcode>
+				<expected>
+					<text>0</text>
+				</expected>
+				<extra>
+					<text/>
+				</extra>
+				<display>
+					<text>SHOW</text>
+				</display>
+			</testcase>
+			<testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+				<testcode>
+					<text>sqr(-100)</text>
+				</testcode>
+				<expected>
+					<text>10000</text>
+				</expected>
+				<extra>
+					<text/>
+				</extra>
+				<display>
+					<text>SHOW</text>
+				</display>
+			</testcase>
+		</testcases>
+	</question>
+	
+
+</quiz>

@@ -70,6 +70,7 @@ class Z3Expression(object):
 
 	def _wrapIf(self,e,solver,env):
 		if env == None:
+			return If(e,self._constant(1,solver),self._constant(0,solver))
 			return If(e,True,False)
 		else:
 			return e

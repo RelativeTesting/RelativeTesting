@@ -9,7 +9,7 @@
 		<name>
 			
       
-			<text/>
+			<text>default quiz </text>
 			
     
 		</name>
@@ -18,7 +18,7 @@
 		<questiontext format="html">
 			
       
-			<text/>
+			<text>default text</text>
 			
     
 		</questiontext>
@@ -84,18 +84,7 @@
 		<resultcolumns/>
 		
     
-		<template>{{ STUDENT_ANSWER }}
-
-__student_answer__ = &quot;&quot;&quot;{{ STUDENT_ANSWER | e('py') }}&quot;&quot;&quot;
-
-SEPARATOR = &quot;#&lt;ab@17943918#@&gt;#&quot;
-
-{% for TEST in TESTCASES %}
-print(repr({{ TEST.testcode }}))
-{% if not loop.last %}
-print(SEPARATOR)
-{% endif %}
-{% endfor %}</template>
+		<template/>
 		
     
 		<iscombinatortemplate/>
@@ -184,11 +173,16 @@ print(SEPARATOR)
     
 		<testcases>
 			<testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
-				<testcode>
-					<text>sqr(-3)</text>
-				</testcode>
+				<stdin>
+					<text>1
+2
+3
+</text>
+				</stdin>
 				<expected>
-					<text>9</text>
+					<text>Value of a: 1
+Value of b: 2
+Value of c: 3</text>
 				</expected>
 				<extra>
 					<text/>
@@ -198,11 +192,16 @@ print(SEPARATOR)
 				</display>
 			</testcase>
 			<testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
-				<testcode>
-					<text>sqr(11)</text>
-				</testcode>
+				<stdin>
+					<text>2
+4
+6
+</text>
+				</stdin>
 				<expected>
-					<text>121</text>
+					<text>Value of a: 2
+Value of b: 4
+Value of c: 6</text>
 				</expected>
 				<extra>
 					<text/>
@@ -212,11 +211,16 @@ print(SEPARATOR)
 				</display>
 			</testcase>
 			<testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
-				<testcode>
-					<text>sqr(-4)</text>
-				</testcode>
+				<stdin>
+					<text>3
+5
+7
+</text>
+				</stdin>
 				<expected>
-					<text>16</text>
+					<text>Value of a: 3
+Value of b: 5
+Value of c: 7 </text>
 				</expected>
 				<extra>
 					<text/>
@@ -226,25 +230,16 @@ print(SEPARATOR)
 				</display>
 			</testcase>
 			<testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
-				<testcode>
-					<text>sqr(0)</text>
-				</testcode>
+				<stdin>
+					<text>0
+-1
+-5
+</text>
+				</stdin>
 				<expected>
-					<text>0</text>
-				</expected>
-				<extra>
-					<text/>
-				</extra>
-				<display>
-					<text>SHOW</text>
-				</display>
-			</testcase>
-			<testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
-				<testcode>
-					<text>sqr(-100)</text>
-				</testcode>
-				<expected>
-					<text>10000</text>
+					<text>Value of a: 0
+Value of b: -1
+Value of c: -5 </text>
 				</expected>
 				<extra>
 					<text/>

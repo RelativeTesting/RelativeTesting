@@ -9,7 +9,7 @@
 		<name>
 			
       
-			<text/>
+			<text>default quiz </text>
 			
     
 		</name>
@@ -18,7 +18,7 @@
 		<questiontext format="html">
 			
       
-			<text/>
+			<text>default text</text>
 			
     
 		</questiontext>
@@ -84,18 +84,7 @@
 		<resultcolumns/>
 		
     
-		<template>{{ STUDENT_ANSWER }}
-
-__student_answer__ = &quot;&quot;&quot;{{ STUDENT_ANSWER | e('py') }}&quot;&quot;&quot;
-
-SEPARATOR = &quot;#&lt;ab@17943918#@&gt;#&quot;
-
-{% for TEST in TESTCASES %}
-print(repr({{ TEST.testcode }}))
-{% if not loop.last %}
-print(SEPARATOR)
-{% endif %}
-{% endfor %}</template>
+		<template/>
 		
     
 		<iscombinatortemplate/>

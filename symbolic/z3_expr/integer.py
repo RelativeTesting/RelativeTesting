@@ -35,4 +35,6 @@ class Z3Integer(Z3Expression):
 		return Or(l, r)
 
 	def _and(self, l, r, solver):
-		return And(l, r)
+		and_fun = Function('int_and', IntSort(), IntSort(), IntSort())
+		return and_fun(l, r)
+		#return And(l, r)

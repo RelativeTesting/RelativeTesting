@@ -28,20 +28,9 @@
     <globalextra></globalextra>
     <useace></useace>
     <resultcolumns></resultcolumns>
-    <template><![CDATA[{{ STUDENT_ANSWER }}
-
-__student_answer__ = """{{ STUDENT_ANSWER | e('py') }}"""
-
-SEPARATOR = "#<ab@17943918#@>#"
-
-{% for TEST in TESTCASES %}
-print(repr({{ TEST.testcode }}))
-{% if not loop.last %}
-print(SEPARATOR)
-{% endif %}
-{% endfor %}]]></template>
-    <iscombinatortemplate></iscombinatortemplate>
-    <allowmultiplestdins></allowmultiplestdins>
+    <template/>
+    <iscombinatortemplate/>
+    <allowmultiplestdins/>
     <answer></answer>
     <validateonsave>1</validateonsave>
     <testsplitterre></testsplitterre>

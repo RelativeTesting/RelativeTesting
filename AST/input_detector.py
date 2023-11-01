@@ -42,7 +42,17 @@ class InputVisitor(ast.NodeTransformer):
             return ast.copy_location(new_node, node)
         else:
             return self.generic_visit(node)
+    
+import ast
 
+class RemoveTypeConversions(ast.NodeTransformer):
+    def visit_Call(self, node):
+        if isinstance(node.func, ast.Name) and node.func.id in ("int", "float", "str"):
+            # int(param), float(param), veya str(param) gibi ifadeleri kaldır
+            if isinstance(node.args[0], ast.Name):
+                param_name = node.args[0].id
+                return ast.copy_location(ast.Name(id=param_name, ctx=ast.Load()), node)
+        return self.generic_visit(node)
 
 def type_user_inputs(code_file):
     with open(code_file, 'r') as f:
@@ -50,11 +60,6 @@ def type_user_inputs(code_file):
     tree = ast.parse(code)
     visitor = InputVisitorDetector()
     visitor.visit(tree)
-    with open(code_file[:-3]+"_inputs_types.txt", "w") as file:
-        file.write("Our Actual Inputs with Types\n")
-        for key, value in visitor.user_inputs_all.items():
-            file.write(f"{key}: {value}\n")
-    file.close()
     return visitor.user_inputs_all
 
 def detect_user_inputs(code_file):
@@ -63,13 +68,16 @@ def detect_user_inputs(code_file):
     tree = ast.parse(code)
     visitor = InputVisitor()
     visitor.visit(tree)
-    new_tree=ast.fix_missing_locations(tree)
+    new_tree1=ast.fix_missing_locations(tree)
+    transformer = RemoveTypeConversions()
+    new_tree = transformer.visit(new_tree1)
+    new_tree = ast.fix_missing_locations(new_tree)
     my_real_inputs=list(type_user_inputs(code_file).values())
-    #print(my_real_inputs)
+    print(my_real_inputs)
     function_node = ast.FunctionDef(
     name=code_file[:-3],
     args=ast.arguments(
-        args=[ast.arg(arg=list(visitor.user_inputs.keys())[i], annotation=my_real_inputs[i]) for i in range(len(visitor.user_inputs.keys()))],
+        args=[ast.arg(arg=list(visitor.user_inputs.keys())[i], annotation=None) for i in range(len(visitor.user_inputs.keys()))],
         vararg=None,
         kwonlyargs=[],
         kw_defaults=[],
@@ -80,16 +88,6 @@ def detect_user_inputs(code_file):
     decorator_list=[],
     returns=None
 )
-    
     with open("final_file_"+code_file, "w") as f:
         f.write(astor.to_source(function_node))
-    f.close()
-    with open(code_file[:-3]+"_inputs_types.txt", "a") as file:
-        file.write("\nOur Converted Inputs with Types\n")
-        for key, value in visitor.user_inputs.items():
-            file.write(f"{key}: {value}\n")
-    file.close()
     return visitor.user_inputs
-
-file_name=input("Enter your code file name: ")
-detect_user_inputs(code_file=file_name)

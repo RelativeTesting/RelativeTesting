@@ -75,7 +75,7 @@ def detect_user_inputs(code_file):
     my_real_inputs=list(type_user_inputs(code_file).values())
     print(my_real_inputs)
     function_node = ast.FunctionDef(
-    name=code_file[:-3],
+    name=code_file[10:-3]+"_final",
     args=ast.arguments(
         args=[ast.arg(arg=list(visitor.user_inputs.keys())[i], annotation=None) for i in range(len(visitor.user_inputs.keys()))],
         vararg=None,
@@ -88,6 +88,8 @@ def detect_user_inputs(code_file):
     decorator_list=[],
     returns=None
 )
-    with open("final_file_"+code_file, "w") as f:
+    
+    with open(code_file[:-3]+'_final.py', "w") as f:
         f.write(astor.to_source(function_node))
     return visitor.user_inputs
+

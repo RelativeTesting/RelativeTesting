@@ -42,7 +42,8 @@ app = loaderFactory(filename,options.entry)
 print("entry", options)
 if app == None:
 	sys.exit(1)
-
+	
+# Which file is being explored now
 print ("Exploring " + app.getFile() + "." + app.getEntry())
 
 result = None

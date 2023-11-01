@@ -1,0 +1,7 @@
+Our Actual Inputs with Types
+img_width: int
+img_height: int
+
+Our Converted Inputs with Types
+param1: <class 'str'>
+param2: <class 'str'>

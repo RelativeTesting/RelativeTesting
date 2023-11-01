@@ -51,7 +51,7 @@ def make_method(method,op,a):
 	code += "	ret = self.getConcrValue() == other  \n"
 	code += "	change_operators(self.expr, '==') \n"
 	code += "	#print(%s, '%s', %s, %s, self.expr)\n" % ("'method:'", op, a, "'return is:'")
-	code += "	SymbolicObject.SI.whichBranch(not ret, self)\n"
+	code += "	SymbolicObject.SI.whichBranch(ret, self)\n"
 	code += "	#change_operators(self.expr, '!=') \n"
 	code += "	#SymbolicObject.SI.whichBranch(True, self)\n"
 	code += "	#if self.expr != None: \n"

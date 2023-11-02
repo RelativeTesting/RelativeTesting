@@ -20,12 +20,14 @@ class Z3Wrapper(object):
 		self.z3_expr = None
 		self.pre_asserts = None
 
-	def findCounterexample(self, asserts, query):
+	def findCounterexample(self, asserts, query, solution_limit=1):
 		"""Tries to find a counterexample to the query while
 	  	 asserts remains valid."""
 		self.solver = Solver()
 		self.query = query
+		self.solution_limit = solution_limit
 		#self.asserts = self._coneOfInfluence(asserts,query)
+
 		self.asserts = asserts
 		print("Asserts",self.asserts)
 		print("Query",self.query)
@@ -72,10 +74,19 @@ class Z3Wrapper(object):
 		if res == unsat:
 			return None
 
-		model = self._getModel()
-		print("Model is ", model)
+		sol = self._get_solutions()
+		models = []
+		for i in range(self.solution_limit):
+			res = next(sol)
+			if res == None:
+				break
+			print("Solution is ", res)
+			model = self._getModel()
+			models.append(model)
+			print("Model is ", model)
+		
 		self.solver.pop()
-		return model
+		return models
 
 
 	def _setAssertsQuery(self):

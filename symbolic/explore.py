@@ -12,8 +12,9 @@ from .symbolic_types import symbolic_type, SymbolicType
 log = logging.getLogger("se.conc")
 
 class ExplorationEngine:
-	def __init__(self, funcinv, solver="z3"):
+	def __init__(self, funcinv, solver="z3", solution_limit=1):
 		self.invocation = funcinv
+		self.solution_limit = solution_limit
 		# the input to the function
 		self.symbolic_inputs = {}  # string -> SymbolicType
 		# initialize
@@ -51,7 +52,7 @@ class ExplorationEngine:
 	def explore(self, max_iterations=0):
 		if self.invocation.pre_asserts != None and len(self.invocation.pre_asserts) > 0:
 			log.info("Adding pre-asserts")
-			model = self.solver.findCounterexample(self.invocation.pre_asserts, None )
+			model = self.solver.findCounterexample(self.invocation.pre_asserts, None , self.solution_limit )
 			if model == None:
 				log.info("Pre-asserts are unsatisfiable, terminating")
 				return self.generated_inputs, self.execution_return_values, self.path
@@ -76,13 +77,18 @@ class ExplorationEngine:
 			asserts, query = selected.getAssertsAndQuery()
 			#print("ASSERTS, QUERY", asserts, query)
 			self.solver.addPreAsserts(self.invocation.pre_asserts)
-			model = self.solver.findCounterexample(asserts, query)
+			models = self.solver.findCounterexample(asserts, query, self.solution_limit)
 
-			if model == None:
+			if models == None or len(models) == 0:
 				continue
-			else:
-				for name in model.keys():
-					self._updateSymbolicParameter(name,model[name])
+			
+			print("models", models)
+			for mdl in models[1:]:
+				self._recordInputs(mdl)
+
+			model = models[0]
+			for name in model.keys():
+				self._updateSymbolicParameter(name,model[name])
 
 			self._oneExecution(selected)
 
@@ -124,10 +130,17 @@ class ExplorationEngine:
 		else:
 			return v
 
-	def _recordInputs(self):
-		args = self.symbolic_inputs
-		inputs = [ (k,self._getConcrValue(args[k])) for k in args ]
-		self.generated_inputs.append(inputs)
+	def _recordInputs(self, args=None):
+		if args == None:
+			args = self.symbolic_inputs
+			inputs = [ (k,self._getConcrValue(args[k])) for k in args ]
+			self.generated_inputs.append(inputs)
+		else: 
+			inputs = [ (k,self._getConcrValue(args[k])) for k in args ]
+			for x in self.symbolic_inputs.keys():
+				if x not in args:
+					inputs.append((x,self._getConcrValue(self.symbolic_inputs[x])))
+			self.generated_inputs.append(inputs)
 		#print(inputs)
 		
 	def _oneExecution(self,expected_path=None):

@@ -20,12 +20,13 @@ def pyexz3_function(file_path):
 	parser.add_option("-s", "--start", dest="entry", action="store", help="Specify entry point", default="")
 	parser.add_option("-g", "--graph", dest="dot_graph", action="store_true", help="Generate a DOT graph of execution tree")
 	parser.add_option("-m", "--max-iters", dest="max_iters", type="int", help="Run specified number of iterations", default=0)
+	parser.add_option("-c", "--solution-count", dest="solution_count", type="int", help="Number of solutions to find", default=1)
 	parser.add_option("--cvc", dest="cvc", action="store_true", help="Use the CVC SMT solver instead of Z3", default=False)
 	parser.add_option("--z3", dest="cvc", action="store_false", help="Use the Z3 SMT solver")
-
+	
 
 	(options, args) = parser.parse_args()
-
+	print("options", options)
 	if not (options.logfile == ""):
 		logging.basicConfig(filename=options.logfile,level=logging.DEBUG)
 
@@ -45,7 +46,7 @@ def pyexz3_function(file_path):
 
 	result = None
 	try:
-		engine = ExplorationEngine(app.createInvocation(), solver=solver)
+		engine = ExplorationEngine(app.createInvocation(), solver=solver, solution_limit=options.solution_count )
 		generatedInputs, returnVals, path = engine.explore(options.max_iters)
 		# check the result
 		result = app.executionComplete(returnVals)

@@ -42,17 +42,17 @@ from symbolic.args import *
     
 
 #@symbolic(x = "@(x != 2) and (y > 2) ")
-def test_str(x,y):
+# def test_str(x,y):
     
-    #a = x * 3
-    #c = (x * (y * 15)) % 40
-    for i in range(5 ):
-        x //= 3
-        if x < 3:
-            return 3
+#     #a = x * 3
+#     #c = (x * (y * 15)) % 40
+#     for i in range(5 ):
+#         x //= 3
+#         if x < 3:
+#             return 3
 
 
-    return 2
+#     return 2
 
 # def test_str(x,y):
 
@@ -60,3 +60,11 @@ def test_str(x,y):
 #      # b = a*12
 #      c = (x * (y * 15)) % 40
 #      return 2
+
+def test_str(x, y):
+    a = 0
+    if x > 5:
+        a = 1
+    if y > 10:
+        a = 2
+    return a

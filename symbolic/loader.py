@@ -35,11 +35,15 @@ class Loader:
 		inv = FunctionInvocation(self._execute,self._resetCallback)
 		func = self.app.__dict__[self._entryPoint]
 		argspec = inspect.getfullargspec(func)
+		# Retrieves the full properties of the function's arguments, using the inspect module.
 
 		# check to see if user specified types of arguments
 		cons_dict = {}
 		type_dict = {}
 		initial_dict = {}
+		# For example, if the type is 'int', it adds the 'SymbolicInteger' type to 'cons_dict',
+		# the 'int' type to the 'type_dict',
+		# and the value '0' to the 'initial_dict' for the argument.
 		if "type_args" in func.__dict__:
 			for (p,t) in func.type_args.items():
 				if not p in argspec.args:
@@ -59,6 +63,8 @@ class Loader:
 						raise ImportError()
 						
 		# check to see if user specified initial values of arguments
+		# if initial values are specified under the name 'concrete_args' in the 'func' property, 
+		# it adds these values to the 'inv' object with the 'Loader._initializeArgumentConcrete' function.
 		if "concrete_args" in func.__dict__:
 			for (f,v) in func.concrete_args.items():
 				if not f in argspec.args:
@@ -68,6 +74,7 @@ class Loader:
 					Loader._initializeArgumentConcrete(inv,f,v)
 
 		# check to see if user specified symbolic values of arguments
+		# same things, adds symbolic values to the 'inv' object with the 'Loader._initializeArgumentSymbolic' function.
 		if "symbolic_args" in func.__dict__:
 			for (f,v) in func.symbolic_args.items():
 				if not f in argspec.args:
@@ -87,7 +94,8 @@ class Loader:
 					else:
 						v = v[1:]
 						self._annotationHelper(v, inv, f, type_dict, cons_dict, initial_dict)
-
+		
+		# This for loop, the arguments in the inv object are made symbolic.
 		for a in argspec.args:
 			if not a in inv.getNames():
 				if a in type_dict:

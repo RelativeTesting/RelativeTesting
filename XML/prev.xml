@@ -1,0 +1,177 @@
+<?xml version="1.0" ?>
+<quiz>
+	
+
+  
+	<question type="coderunner">
+		
+    
+		<name>
+			
+      
+			<text>default quiz </text>
+			
+    
+		</name>
+		
+    
+		<questiontext format="html">
+			
+      
+			<text>default text</text>
+			
+    
+		</questiontext>
+		
+    
+		<generalfeedback format="html">
+			
+      
+			<text/>
+			
+    
+		</generalfeedback>
+		
+    
+		<defaultgrade>1</defaultgrade>
+		
+    
+		<penalty>0</penalty>
+		
+    
+		<hidden>0</hidden>
+		
+    
+		<idnumber/>
+		
+    
+		<coderunnertype>python3</coderunnertype>
+		
+    
+		<prototypetype>0</prototypetype>
+		
+    
+		<allornothing>1</allornothing>
+		
+    
+		<penaltyregime>0, 10, 20, ...</penaltyregime>
+		
+    
+		<precheck>0</precheck>
+		
+    
+		<hidecheck>0</hidecheck>
+		
+    
+		<showsource>0</showsource>
+		
+    
+		<answerboxlines>5</answerboxlines>
+		
+    
+		<answerboxcolumns>100</answerboxcolumns>
+		
+    
+		<answerpreload/>
+		
+    
+		<globalextra/>
+		
+    
+		<useace/>
+		
+    
+		<resultcolumns/>
+		
+    
+		<template/>
+		
+    
+		<iscombinatortemplate/>
+		
+    
+		<allowmultiplestdins/>
+		
+    
+		<answer/>
+		
+    
+		<validateonsave>1</validateonsave>
+		
+    
+		<testsplitterre/>
+		
+    
+		<language/>
+		
+    
+		<acelang/>
+		
+    
+		<sandbox/>
+		
+    
+		<grader/>
+		
+    
+		<cputimelimitsecs/>
+		
+    
+		<memlimitmb/>
+		
+    
+		<sandboxparams/>
+		
+    
+		<templateparams/>
+		
+    
+		<hoisttemplateparams>0</hoisttemplateparams>
+		
+    
+		<templateparamslang>twig</templateparamslang>
+		
+    
+		<templateparamsevalpertry>0</templateparamsevalpertry>
+		
+    
+		<templateparamsevald>{}</templateparamsevald>
+		
+    
+		<twigall>0</twigall>
+		
+    
+		<uiplugin/>
+		
+    
+		<uiparameters/>
+		
+    
+		<attachments>0</attachments>
+		
+    
+		<attachmentsrequired>0</attachmentsrequired>
+		
+    
+		<maxfilesize>0</maxfilesize>
+		
+    
+		<filenamesregex/>
+		
+    
+		<filenamesexplain/>
+		
+    
+		<displayfeedback>0</displayfeedback>
+		
+    
+		<giveupallowed>0</giveupallowed>
+		
+    
+		<prototypeextra/>
+		
+    
+	</question>
+	
+
+</quiz>

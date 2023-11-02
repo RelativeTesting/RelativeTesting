@@ -52,19 +52,16 @@ def make_method(method,op,a):
 	code += "		self_parent = find_parent(self) \n"
 	code += "		other_parent = find_parent(other) \n"	
 	code += "		if self_parent != other_parent: \n"
-	code += "			#change_operators(self.expr, '==') \n"
-	code += "			print('SELF EXPR', self.expr) \n"
 	code += "			ret = self.getConcrValue() == int(other) \n"
 	code += "			expr = ['==', self, int(other)]\n"
 	code += "			se = SymbolicInteger('se', ret, expr) \n"
-	code += "			SymbolicObject.SI.whichBranch(ret, se)\n"
-	code += "		else: \n"
-	code += "			print('################################') \n"
+	code += "			SymbolicObject.SI.arithmeticBranch(ret, se)\n"
+
 	code += "	else: \n"
 	code += "		ret = self.getConcrValue() == int(other) \n"
 	code += "		expr = ['==', self, int(other)]\n"
 	code += "		se = SymbolicInteger('se', ret, expr) \n"
-	code += "		SymbolicObject.SI.whichBranch(ret, se)\n"
+	code += "		SymbolicObject.SI.arithmeticBranch(ret, se)\n"
 	code += "	return self._op_worker(%s,lambda x,y : x %s y, \"%s\")" % (a,op,op)
 	locals_dict = {}
 	exec(code, globals(), locals_dict)
@@ -79,17 +76,11 @@ def make_method2(method,op,a):
 
 
 for (name,op) in ops:
-	#if op == "%" or op == "/" or op == "//":
 	
-		method  = "__%s__" % name
-		make_method2(method,op,"[self,other]")
-		rmethod  = "__r%s__" % name
-		make_method2(rmethod,op,"[other,self]")
-	# else:
-	# 	method  = "__%s__" % name
-	# 	make_method2(method,op,"[self,other]")
-	# 	rmethod  = "__r%s__" % name
-	# 	make_method2(rmethod,op,"[other,self]")
+	method  = "__%s__" % name
+	make_method(method,op,"[self,other]")
+	rmethod  = "__r%s__" % name
+	make_method(rmethod,op,"[other,self]")
 	
 
 
@@ -109,10 +100,8 @@ def change_operators(expr, op=None):
 def find_parent(symbolic_object):
 	if isinstance(symbolic_object, SymbolicObject):
 		if symbolic_object.expr == None:
-			print("Name is", symbolic_object.name)
 			return symbolic_object.name
 		else:
-			#print(symbolic_object.expr)
 			return find_parent(symbolic_object.expr[1])
 	elif isinstance(symbolic_object, list):
 		return find_parent(symbolic_object[1])

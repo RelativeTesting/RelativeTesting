@@ -29,8 +29,6 @@ class Z3Wrapper(object):
 		#self.asserts = self._coneOfInfluence(asserts,query)
 
 		self.asserts = asserts
-		print("Asserts",self.asserts)
-		print("Query",self.query)
 		res = self._findModel()
 		log.debug("Query -- %s" % self.query)
 		log.debug("Asserts -- %s" % asserts)
@@ -68,7 +66,6 @@ class Z3Wrapper(object):
 
 		self.z3_expr.toZ3(self.solver,self.asserts,self.query)		
 
-		print("Solver assertions", self.solver.assertions)
 
 		res = self.solver.check()
 		if res == unsat:
@@ -80,10 +77,8 @@ class Z3Wrapper(object):
 			res = next(sol)
 			if res == None:
 				break
-			print("Solution is ", res)
 			model = self._getModel()
 			models.append(model)
-			print("Model is ", model)
 		
 		self.solver.pop()
 		return models
@@ -130,5 +125,6 @@ class Z3Wrapper(object):
 			self.solver.add(z3.Or(block))
 			# Look for new solution
 			result = self.solver.check()
+		yield None
 
 

@@ -57,8 +57,8 @@ class ExplorationEngine:
 				log.info("Pre-asserts are unsatisfiable, terminating")
 				return self.generated_inputs, self.execution_return_values, self.path
 			else:
-				for name in model.keys():
-					self._updateSymbolicParameter(name,model[name])
+				for name in model[0].keys():
+					self._updateSymbolicParameter(name,model[0][name])
 
 		self._oneExecution()
 		iterations = 1
@@ -82,7 +82,7 @@ class ExplorationEngine:
 			if models == None or len(models) == 0:
 				continue
 			
-			print("models", models)
+			#print("models", models)
 			for mdl in models[1:]:
 				self._recordInputs(mdl)
 
@@ -144,10 +144,18 @@ class ExplorationEngine:
 		#print(inputs)
 		
 	def _oneExecution(self,expected_path=None):
-		self._recordInputs()
-		self.path.reset(expected_path)
-		#print("sym in", self.symbolic_inputs)
-		ret = self.invocation.callFunction(self.symbolic_inputs)
-		#print(ret, "hello")
-		self.execution_return_values.append(ret)
+		try:
+			self._recordInputs()
+			self.path.reset(expected_path)
+			ret = self.invocation.callFunction(self.symbolic_inputs)
+			
+			self.execution_return_values.append(ret)
+		except:
+			self.generated_inputs.pop()
+			print("Unexpected error:")
+			self.createAssertion()
+	
+	#Creates assertion based on execution failure
+	def createAssertion(self):
+		print("Failed inputs", self.symbolic_inputs)
 

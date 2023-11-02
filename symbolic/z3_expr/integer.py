@@ -15,24 +15,16 @@ class Z3Integer(Z3Expression):
 	def _constant(self,v,solver):
 		return IntVal(v,solver.ctx)
 
-	def _mod(self, l, r, solver):
-		mod_fun = Function('int_mod', IntSort(), IntSort(), IntSort())
-		return mod_fun(l, r)
-
-	def _lsh(self, l, r, solver):
-		lsh_fun = Function('int_lsh', IntSort(), IntSort(), IntSort())
-		return lsh_fun(l, r)
-
-	def _rsh(self, l, r, solver):
-		rsh_fun = Function('int_rsh', IntSort(), IntSort(), IntSort())
-		return rsh_fun(l, r)
-
-	def _xor(self, l, r, solver):
-		xor_fun = Function('int_xor', IntSort(), IntSort(), IntSort())
-		return xor_fun(l, r)
-
 	def _or(self, l, r, solver):
-		return Or(l, r)
+		if isinstance(l, ArithRef) and isinstance(r, ArithRef):
+			l = 0 != l
+			r = 0 != r
+			return Or(l, r)
+		return Z3Expression._mod(self,l, r,solver)
 
 	def _and(self, l, r, solver):
-		return And(l, r)
+		if isinstance(l, ArithRef) and isinstance(r, ArithRef):
+			l = 0 != l
+			r = 0 != r
+			return And(l, r)
+		return Z3Expression._and(self,l, r,solver)(l, r)

@@ -13,9 +13,9 @@ class AstWrapper:
 
     def find_constraint(self):
         tree = ast.parse(self.constraint_line)
-        print("hello there", ast.dump(tree))
-        pred = self.parse_tree(tree.body[0])
-        print(type(pred).__name__, pred)
+        expr = self.parse_tree(tree.body[0])
+        se = self.arg_constructor("se", 0, expr)
+        pred = Predicate(se, True)
         return pred
     
     def parse_tree(self, expr):
@@ -53,15 +53,14 @@ class AstWrapper:
         pred1 = self.parse_tree(expr.values[0])
         pred2 = self.parse_tree(expr.values[1])
         expr = ["&", pred1, pred2]
-        se = self.arg_constructor("se", self.initial_val, expr)
-        return Predicate(se, do_op("&", pred1.result, pred2.result))
+        return expr
+        
     def parse_or(self, expr):
         pred1 = self.parse_tree(expr.values[0])
         pred2 = self.parse_tree(expr.values[1])
         expr = ["|", pred1, pred2]
-        se = self.arg_constructor("se", self.initial_val, expr)
-        return Predicate(se, do_op("|", pred1.result, pred2.result))
-
+        return expr
+    
     def parse_compare(self, expr):
         if expr.ops[0].__class__.__name__ == "Eq":
             return self.parse_eq(expr)
@@ -85,8 +84,8 @@ class AstWrapper:
             expr = ["==", st, val]
         else:
             expr = ["==", st, self.type_func(val)]
-        se = self.arg_constructor("se", self.initial_val, expr)
-        return Predicate(se, do_op("==", self.initial_val, self.type_func(val)))
+        return expr
+        
     def parse_ne(self, expr):
         st = self.parse_tree(expr.left)
         val = self.parse_tree(expr.comparators[0])
@@ -94,18 +93,17 @@ class AstWrapper:
             expr = ["!=", st, val]
         else:
             expr = ["!=", st, self.type_func(val)]
-        se = self.arg_constructor("se", self.initial_val, expr)
-        return Predicate(se, do_op("!=", self.initial_val, self.type_func(val)))
+        return expr
+        
     def parse_lt(self, expr):
         st = self.parse_tree(expr.left)
         val = self.parse_tree(expr.comparators[0])
         if isinstance(val, SymbolicType):
             expr = ["<", st, val]
         else:
-            expr = ["<", st, self.type_func(val)]
-            
-        se = self.arg_constructor("se", self.initial_val, expr)
-        return Predicate(se, do_op("<", self.initial_val, self.type_func(val)))
+            expr = ["<", st, self.type_func(val)]        
+        return expr
+    
     def parse_lte(self, expr):
         st = self.parse_tree(expr.left)
         val = self.parse_tree(expr.comparators[0])
@@ -113,8 +111,8 @@ class AstWrapper:
             expr = ["<=", st, val]
         else:
             expr = ["<=", st, self.type_func(val)]
-        se = self.arg_constructor("se", self.initial_val, expr)
-        return Predicate(se, do_op("<=", self.initial_val, self.type_func(val)))
+        return expr
+    
     def parse_gt(self, expr):
         st = self.parse_tree(expr.left)
         val = self.parse_tree(expr.comparators[0])
@@ -122,8 +120,8 @@ class AstWrapper:
             expr = [">", st, val]
         else:
             expr = [">", st, self.type_func(val)]
-        se = self.arg_constructor("se", self.initial_val, expr)
-        return Predicate(se, do_op(">", self.initial_val, self.type_func(val)))
+        return expr
+    
     def parse_gte(self, expr):
         st = self.parse_tree(expr.left)
         val = self.parse_tree(expr.comparators[0])
@@ -131,8 +129,7 @@ class AstWrapper:
             expr = [">=", st, val]
         else:
             expr = [">=", st, self.type_func(val)]
-        se = self.arg_constructor("se", self.initial_val, expr)
-        return Predicate(se, do_op(">=", self.initial_val, self.type_func(val)))
+        return expr
         
     def parse_name(self, expr):
         return self.arg_constructor(expr.id , self.initial_val)

@@ -51,7 +51,7 @@ class ExplorationEngine:
 	def explore(self, max_iterations=0):
 		if self.invocation.pre_asserts != None and len(self.invocation.pre_asserts) > 0:
 			log.info("Adding pre-asserts")
-			model = self.solver.findCounterexample(None, self.invocation.pre_asserts[0])
+			model = self.solver.findCounterexample(self.invocation.pre_asserts, None )
 			if model == None:
 				log.info("Pre-asserts are unsatisfiable, terminating")
 				return self.generated_inputs, self.execution_return_values, self.path
@@ -65,6 +65,8 @@ class ExplorationEngine:
 			log.debug("Maximum number of iterations reached, terminating")
 			return self.execution_return_values
 		while not self._isExplorationComplete():
+			#print("CONSTRAINTS", self.constraints_to_solve)
+			
 			selected = self.constraints_to_solve.popleft()
 			if selected.processed:
 				continue
@@ -72,6 +74,7 @@ class ExplorationEngine:
 
 			log.info("Selected constraint %s" % selected)
 			asserts, query = selected.getAssertsAndQuery()
+			#print("ASSERTS, QUERY", asserts, query)
 			self.solver.addPreAsserts(self.invocation.pre_asserts)
 			model = self.solver.findCounterexample(asserts, query)
 

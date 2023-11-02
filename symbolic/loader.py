@@ -164,6 +164,16 @@ class Loader:
 			annotation_constraint = AstWrapper(constraint_line, f, constructor, initial_val, type_func)
 			predicate = annotation_constraint.find_constraint()
 			inv.addPreAsserts(predicate)
+		else:
+			constructor = SymbolicInteger
+			type_func = int
+			initial_val = 0
+
+			annotation_constraint = AstWrapper(constraint_line, f, constructor, initial_val, type_func)
+			predicate = annotation_constraint.find_constraint()
+			inv.addPreAsserts(predicate)
+			
+			
 
 	
 def loaderFactory(filename,entry):

@@ -70,16 +70,13 @@ class Z3Expression(object):
 
 	def _wrapIf(self,e,solver,env):
 		if env == None:
-			return If(e,True,False)
+			return If(e,self._constant(1,solver),self._constant(0,solver))
 		else:
 			return e
 
 	# add concrete evaluation to this, to check
 	def _astToZ3Expr(self,expr,solver,env=None):
-		print("expression is", type(expr).__name__, expr)
-		if isinstance(expr, Predicate):
-			return self._astToZ3Expr(expr.symtype,solver,env)
-		elif isinstance(expr, list) and len(expr) == 3:
+		if isinstance(expr, list) and len(expr) == 3:
 			op = expr[0]
 			args = [ self._astToZ3Expr(a,solver,env) for a in expr[1:] ]
 			z3_l,z3_r = args[0],args[1]
@@ -89,10 +86,10 @@ class Z3Expression(object):
 		elif isinstance(expr, list) and len(expr) == 2:
 			op = expr[0]
 			arg =  self._astToZ3Expr(expr[1],solver,env)
-			print("come here", "expression is", type(expr).__name__, expr)
-			print("op", op, "arg", arg, "type", type(arg).__name__)
+			#print("come here", "expression is", type(expr).__name__, expr)
+			#print("op", op, "arg", arg, "type", type(arg).__name__)
 			tmp =  self._getConstant(expr[1], solver)
-			print("deneme", tmp, type(tmp).__name__, "type expr1", type(expr[1]).__name__)
+			#print("deneme", tmp, type(tmp).__name__, "type expr1", type(expr[1]).__name__)
 			if op == "str.len":
 				return Length(arg)
 
@@ -118,7 +115,14 @@ class Z3Expression(object):
 			utils.crash("Unknown node during conversion from ast to Z3 (expressions): %s" % expr)
 
 	def preAssertsToZ3(self,pre_asserts,solver):
-		sym_expr = [ self._astToZ3Expr(p.symtype,solver) for p in pre_asserts ]
+		sym_expr = []
+		for pre_assert in pre_asserts:
+			tmp = self._astToZ3Expr(pre_assert.symtype,solver)
+			if isinstance(tmp, ArithRef):
+				tmp = 0 != tmp
+			elif is_bool(tmp):
+				tmp = tmp
+			sym_expr.append(tmp)
 		return sym_expr
 
 	def _opToZ3Expr(self,op,z3_l,z3_r,solver, env=None):
@@ -129,8 +133,10 @@ class Z3Expression(object):
 			return self._sub(z3_l, z3_r, solver)
 		elif op == "*":
 			return self._mul(z3_l, z3_r, solver)
-		elif op == "//":
+		elif op == "/":
 			return self._div(z3_l, z3_r, solver)
+		elif op == "//":
+			return self._floordiv(z3_l, z3_r, solver)
 		elif op == "%":
 			return self._mod(z3_l, z3_r, solver)
 
@@ -185,6 +191,9 @@ class Z3Expression(object):
 
 	def _div(self, l, r, solver):
 		return l / r
+	
+	def _floordiv(self, l, r, solver):
+		return l.__truediv__(r)
 
 	def _mod(self, l, r, solver):
 		return l % r

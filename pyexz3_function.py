@@ -51,18 +51,12 @@ def pyexz3_function(file_path):
 		# check the result
 		result = app.executionComplete(returnVals)
 
-		# output DOT graph
-		if (options.dot_graph):
-			file = open(filename+".dot","w")
-			file.write(path.toDot())
-			file.close()
-
 	except ImportError as e:
 		# createInvocation can raise this
 		logging.error(e)
-		raise e
+		return False
 
 	if result == None or result == True:
-		return True
+		return generatedInputs
 	else:
-		raise("Error: " + result)
+		return False

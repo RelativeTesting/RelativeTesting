@@ -14,6 +14,7 @@ class PathToConstraint:
 		self.root_constraint = Constraint(None, None)
 		self.current_constraint = self.root_constraint
 		self.expected_path = None
+		self.arithmeticBranches = {}
 
 	def reset(self,expected):
 		self.current_constraint = self.root_constraint
@@ -40,6 +41,9 @@ class PathToConstraint:
 
 		if c is None:
 			c = self.current_constraint.addChild(p)
+			print("add child", end=" ")
+			print(c.__repr__())
+			#print("parent", c.parent)
 
 			# we add the new constraint to the queue of the engine for later processing
 			log.debug("New constraint: %s" % c)
@@ -63,7 +67,16 @@ class PathToConstraint:
 			c.processed = True
 			log.debug("Processed constraint: %s" % c)
 
+		#print("current_constraint", c.parent.predicate)
 		self.current_constraint = c
+
+	def arithmeticBranch(self, res, symbolic_type):
+		p = Predicate(symbolic_type, res)
+		if p not in self.arithmeticBranches:
+			self.arithmeticBranches[p] = True
+			c = Constraint(self.root_constraint, p)
+			self.add(c)
+
 
 	def toDot(self):
 		# print the thing into DOT format

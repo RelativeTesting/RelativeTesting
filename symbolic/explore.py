@@ -12,8 +12,9 @@ from .symbolic_types import symbolic_type, SymbolicType
 log = logging.getLogger("se.conc")
 
 class ExplorationEngine:
-	def __init__(self, funcinv, solver="z3"):
+	def __init__(self, funcinv, solver="z3", solution_limit=1):
 		self.invocation = funcinv
+		self.solution_limit = solution_limit
 		# the input to the function
 		self.symbolic_inputs = {}  # string -> SymbolicType
 		# initialize
@@ -51,13 +52,13 @@ class ExplorationEngine:
 	def explore(self, max_iterations=0):
 		if self.invocation.pre_asserts != None and len(self.invocation.pre_asserts) > 0:
 			log.info("Adding pre-asserts")
-			model = self.solver.findCounterexample(None, self.invocation.pre_asserts[0])
+			model = self.solver.findCounterexample(self.invocation.pre_asserts, None , self.solution_limit )
 			if model == None:
 				log.info("Pre-asserts are unsatisfiable, terminating")
 				return self.generated_inputs, self.execution_return_values, self.path
 			else:
-				for name in model.keys():
-					self._updateSymbolicParameter(name,model[name])
+				for name in model[0].keys():
+					self._updateSymbolicParameter(name,model[0][name])
 
 		self._oneExecution()
 		iterations = 1
@@ -65,6 +66,8 @@ class ExplorationEngine:
 			log.debug("Maximum number of iterations reached, terminating")
 			return self.execution_return_values
 		while not self._isExplorationComplete():
+			#print("CONSTRAINTS", self.constraints_to_solve)
+			
 			selected = self.constraints_to_solve.popleft()
 			if selected.processed:
 				continue
@@ -72,14 +75,20 @@ class ExplorationEngine:
 
 			log.info("Selected constraint %s" % selected)
 			asserts, query = selected.getAssertsAndQuery()
+			#print("ASSERTS, QUERY", asserts, query)
 			self.solver.addPreAsserts(self.invocation.pre_asserts)
-			model = self.solver.findCounterexample(asserts, query)
+			models = self.solver.findCounterexample(asserts, query, self.solution_limit)
 
-			if model == None:
+			if models == None or len(models) == 0:
 				continue
-			else:
-				for name in model.keys():
-					self._updateSymbolicParameter(name,model[name])
+			
+			#print("models", models)
+			for mdl in models[1:]:
+				self._recordInputs(mdl)
+
+			model = models[0]
+			for name in model.keys():
+				self._updateSymbolicParameter(name,model[name])
 
 			self._oneExecution(selected)
 
@@ -121,17 +130,32 @@ class ExplorationEngine:
 		else:
 			return v
 
-	def _recordInputs(self):
-		args = self.symbolic_inputs
-		inputs = [ (k,self._getConcrValue(args[k])) for k in args ]
-		self.generated_inputs.append(inputs)
+	def _recordInputs(self, args=None):
+		if args == None:
+			args = self.symbolic_inputs
+			inputs = [ (k,self._getConcrValue(args[k])) for k in args ]
+			self.generated_inputs.append(inputs)
+		else: 
+			inputs = [ (k,self._getConcrValue(args[k])) for k in args ]
+			for x in self.symbolic_inputs.keys():
+				if x not in args:
+					inputs.append((x,self._getConcrValue(self.symbolic_inputs[x])))
+			self.generated_inputs.append(inputs)
 		#print(inputs)
 		
 	def _oneExecution(self,expected_path=None):
-		self._recordInputs()
-		self.path.reset(expected_path)
-		#print("sym in", self.symbolic_inputs)
-		ret = self.invocation.callFunction(self.symbolic_inputs)
-		#print(ret, "hello")
-		self.execution_return_values.append(ret)
+		try:
+			self._recordInputs()
+			self.path.reset(expected_path)
+			ret = self.invocation.callFunction(self.symbolic_inputs)
+			
+			self.execution_return_values.append(ret)
+		except:
+			self.generated_inputs.pop()
+			print("Unexpected error:")
+			self.createAssertion()
+	
+	#Creates assertion based on execution failure
+	def createAssertion(self):
+		print("Failed inputs", self.symbolic_inputs)
 

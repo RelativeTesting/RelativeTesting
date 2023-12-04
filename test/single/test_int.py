@@ -8,14 +8,14 @@ def test_int(x, y, z):
             return 1
         else:
             return 2
-    if x == "bbbb":
-        return 1
+    # if x == "bbbb":
+    #     return 1
 
-    if y < "ddas":
-        return 2
+    # if y < "ddas":
+    #     return 2
 
-    if x + y == "araba":
-        return 9 
+    # if x + y == "araba":
+    #     return 9 
     
     # if len(y) > 2:
     #     if y[2] == 'a':

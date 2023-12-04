@@ -48,28 +48,43 @@ ops =  [("add",    "+"  ),\
 def make_method(method,op,a):
 	
 	code  = "def %s(self,other):\n" % method
-	code += "	ret = self.getConcrValue() == other  \n"
-	code += "	change_operators(self.expr, '==') \n"
-	code += "	#print(%s, '%s', %s, %s, self.expr)\n" % ("'method:'", op, a, "'return is:'")
-	code += "	SymbolicObject.SI.whichBranch(ret, self)\n"
-	code += "	#change_operators(self.expr, '!=') \n"
-	code += "	#SymbolicObject.SI.whichBranch(True, self)\n"
-	code += "	#if self.expr != None: \n"
-	code += "	#	self.expr[0] = expr \n"
+	code += "	if isinstance(other, SymbolicInteger): \n"
+	code += "		self_parent = find_parent(self) \n"
+	code += "		other_parent = find_parent(other) \n"	
+	code += "		if self_parent != other_parent: \n"
+	code += "			ret = self.getConcrValue() == int(other) \n"
+	code += "			expr = ['==', self, int(other)]\n"
+	code += "			se = SymbolicInteger('se', ret, expr) \n"
+	code += "			SymbolicObject.SI.arithmeticBranch(ret, se)\n"
+
+	code += "	else: \n"
+	code += "		ret = self.getConcrValue() == int(other) \n"
+	code += "		expr = ['==', self, int(other)]\n"
+	code += "		se = SymbolicInteger('se', ret, expr) \n"
+	code += "		SymbolicObject.SI.arithmeticBranch(ret, se)\n"
 	code += "	return self._op_worker(%s,lambda x,y : x %s y, \"%s\")" % (a,op,op)
 	locals_dict = {}
 	exec(code, globals(), locals_dict)
 	setattr(SymbolicInteger,method,locals_dict[method])
 
+def make_method2(method,op,a):
+	code  = "def %s(self,other):\n" % method
+	code += "	return self._op_worker(%s,lambda x,y : x %s y, \"%s\")" % (a,op,op)
+	locals_dict = {}
+	exec(code, globals(), locals_dict)
+	setattr(SymbolicInteger,method,locals_dict[method])
+
+
 for (name,op) in ops:
+	
 	method  = "__%s__" % name
 	make_method(method,op,"[self,other]")
 	rmethod  = "__r%s__" % name
 	make_method(rmethod,op,"[other,self]")
+	
 
 
 def change_operators(expr, op=None):
-	#print("change_operators1", expr)
 	if isinstance(expr, list):
 		nested = False
 		for i in range(len(expr)-1, -1, -1):
@@ -78,7 +93,15 @@ def change_operators(expr, op=None):
 				change_operators(expr[i], op)
 			elif isinstance(expr[i], str):
 				if nested:
-					expr[i] = '&'
+					expr[i] = '=='
 				else:
 					expr[i] = op
-	#print("change_operators2", expr)
+
+def find_parent(symbolic_object):
+	if isinstance(symbolic_object, SymbolicObject):
+		if symbolic_object.expr == None:
+			return symbolic_object.name
+		else:
+			return find_parent(symbolic_object.expr[1])
+	elif isinstance(symbolic_object, list):
+		return find_parent(symbolic_object[1])

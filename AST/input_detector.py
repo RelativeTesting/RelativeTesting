@@ -54,17 +54,15 @@ class RemoveTypeConversions(ast.NodeTransformer):
                 return ast.copy_location(ast.Name(id=param_name, ctx=ast.Load()), node)
         return self.generic_visit(node)
 
-def type_user_inputs(code_file):
-    with open(code_file, 'r') as f:
-        code = f.read()
+def type_user_inputs(code_string):
+    code = code_string
     tree = ast.parse(code)
     visitor = InputVisitorDetector()
     visitor.visit(tree)
     return visitor.user_inputs_all
 
-def detect_user_inputs(code_file):
-    with open(code_file, 'r') as f:
-        code = f.read()
+def detect_user_inputs(code_string, function_name, destination_folder):
+    code = code_string
     tree = ast.parse(code)
     visitor = InputVisitor()
     visitor.visit(tree)
@@ -72,10 +70,10 @@ def detect_user_inputs(code_file):
     transformer = RemoveTypeConversions()
     new_tree = transformer.visit(new_tree1)
     new_tree = ast.fix_missing_locations(new_tree)
-    my_real_inputs=list(type_user_inputs(code_file).values())
+    my_real_inputs=list(type_user_inputs(code_string).values())
     print(my_real_inputs)
     function_node = ast.FunctionDef(
-    name=code_file[:-3],
+    name= function_name +"_final",
     args=ast.arguments(
         args=[ast.arg(arg=list(visitor.user_inputs.keys())[i], annotation=None) for i in range(len(visitor.user_inputs.keys()))],
         vararg=None,
@@ -88,6 +86,8 @@ def detect_user_inputs(code_file):
     decorator_list=[],
     returns=None
 )
-    with open("final_file_"+code_file, "w") as f:
+    
+    with open(destination_folder + function_name +'_final.py', "w") as f:
         f.write(astor.to_source(function_node))
     return visitor.user_inputs
+

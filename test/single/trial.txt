@@ -1,0 +1,5 @@
+x is a integer
+y is a string
+z is a integer
+x is smaller than z and x should be more than 10
+y should be 3 word country abbreviation

@@ -99,7 +99,8 @@ class ExplorationEngine:
 				log.info("Maximum number of iterations reached, terminating")
 				break
 
-		gptRes = self.openai_wrap.full_conversation()
+		gptRes = None
+		#gptRes = self.openai_wrap.full_conversation()
 		generetadInputs = []
 		for i in range(len(self.generated_inputs)):
 			lst = self.generated_inputs[i]
@@ -181,8 +182,18 @@ class ExplorationEngine:
 			
 		pred = Predicate(se, False)
 		self.solver.addFailedInputPred(pred)
-		model = self.solver.findCounterexample(None, None, self.solution_limit)
-		#print("model", model)
+		models = self.solver.findCounterexample(None, None, self.solution_limit)
+		if models == None or len(models) == 0:
+			return
+			
+
+		model = models[0]
+		for name in model.keys():
+			self._updateSymbolicParameter(name,model[name])
+
+		self._oneExecution()
+
+		
 		
 		
 	def findArgCons(self, val):

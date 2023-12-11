@@ -58,6 +58,8 @@ class Z3Wrapper(object):
 		
 		self.solver.push()
 		self.z3_expr = Z3Integer()
+
+		self.z3_expr.toZ3(self.solver,self.asserts,self.query)	
 		
 		if self.pre_asserts != None:
 			pre_asserts = self.z3_expr.preAssertsToZ3(self.pre_asserts, self.solver)
@@ -65,13 +67,11 @@ class Z3Wrapper(object):
 				self.solver.assert_exprs(assert_expr)
 		
 		if self.failedInputPreds != None and len(self.failedInputPreds) > 0:
-			self.z3_expr.toZ3(self.solver, self.failedInputPreds, None)
-
-		self.z3_expr.toZ3(self.solver,self.asserts,self.query)		
+			self.z3_expr.toZ3(self.solver, self.failedInputPreds, None, False)
 
 		res = self.solver.check()
-		tmp = self.solver.assertions().__deepcopy__()
-		self.openai_wrap.add_constraint(tmp, inputs) ## specific slicing to get the constraint
+		self.openai_wrap.add_constraint(self.solver.assertions().__deepcopy__(), inputs) ## specific slicing to get the constraint
+		
 		if res == unsat:
 			return None
 
@@ -94,9 +94,7 @@ class Z3Wrapper(object):
 	def _getModel(self):
 		res = {}
 		try: 
-			#print("Solver assertions2", self.solver.assertions)
 			model = self.solver.model()
-			#print("Real model is", model)
 
 			for name in self.z3_expr.z3_vars.keys():
 				try:

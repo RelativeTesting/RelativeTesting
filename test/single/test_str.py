@@ -30,13 +30,13 @@ from symbolic.args import *
     #     ethernet_delay_seconds, '.4f'), 'second(s)')
 
 
-@types(x="int", y = "int")
-@symbolic(x="@(x > 10 and x < 20) and ((x == 11) or (x == 18))")
-#@symbolic(x="@(x > y and y==6)")
-def test_str(x, y):
-    if x > 15:
-        return 1 
-    return 2
+# @types(x="int", y = "int")
+# @symbolic(x="@(x > 10 and x < 20) and ((x == 11) or (x == 18))")
+# #@symbolic(x="@(x > y and y==6)")
+# def test_str(x, y):
+#     if x > 15:
+#         return 1 
+#     return 2
 
 # # @symbolic(x = "@(x != 2) and (y > 2) ")
 # def test_str(x,y):
@@ -81,4 +81,7 @@ def test_str(x, y):
 
 def test_str(x,y):
     a = 10 / x
+
+    if y > 8:
+        return 2
     return 1

@@ -10,8 +10,9 @@ class Z3Expression(object):
 	def __init__(self):
 		self.z3_vars = {}
 
-	def toZ3(self,solver,asserts,query):
-		self.z3_vars = {}
+	def toZ3(self,solver,asserts,query, reset=True):
+		if reset:
+			self.z3_vars = {}
 
 		if asserts != None:
 			solver.assert_exprs([self.predToZ3(p,solver) for p in asserts])
@@ -54,6 +55,7 @@ class Z3Expression(object):
 				self.z3_vars[name] = self._variable(name,solver)
 			elif isinstance(expr, SymbolicStr):
 				self.z3_vars[name] = String(name,solver.ctx)
+		print("Z3 vars", self.z3_vars)
 		return self.z3_vars[name]
 
 	def _getConstant(self,expr,solver):
@@ -76,6 +78,7 @@ class Z3Expression(object):
 
 	# add concrete evaluation to this, to check
 	def _astToZ3Expr(self,expr,solver,env=None):
+		print("Hello", expr, type(expr).__name__)
 		if isinstance(expr, list) and len(expr) == 3:
 			op = expr[0]
 			args = [ self._astToZ3Expr(a,solver,env) for a in expr[1:] ]
@@ -96,6 +99,7 @@ class Z3Expression(object):
 		elif isinstance(expr, SymbolicInteger) or isinstance(expr, SymbolicStr):
 			if expr.isVariable():
 				if env == None or expr.name not in env:
+					print("Getting variable", expr.name)
 					return self._getVariable(expr,solver)
 				else:
 					return env[expr.name]

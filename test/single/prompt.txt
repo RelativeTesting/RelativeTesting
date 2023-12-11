@@ -1,0 +1,10 @@
+To use it in the Z3 library, I need to define a variable as follows for each variable.
+The Types statement specifies the type, such as int, str, float.
+The concrete expression is used to define predefined values, such as y equals 8.
+The symbolic expression allows each variable to be defined symbolically according to constraints.
+If I want to make more than one definition, I must write an "and" between them. For example ((x > y and x < 20) and (y > 6))
+You can see a one example code that fits these definitions below:
+@types(x="int", y="int")
+@symbolic(x="@((x > y and x < 20) and (y > 6))")
+@concrete(y=8)
+Now I will share a code with you below:

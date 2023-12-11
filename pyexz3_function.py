@@ -47,7 +47,7 @@ def pyexz3_function(file_path):
 	result = None
 	try:
 		engine = ExplorationEngine(app.createInvocation(), solver=solver, solution_limit=options.solution_count )
-		generatedInputs, returnVals, path = engine.explore(options.max_iters)
+		generatedInputs, returnVals, path, gpt_ans = engine.explore(options.max_iters)
 		# check the result
 		result = app.executionComplete(returnVals)
 

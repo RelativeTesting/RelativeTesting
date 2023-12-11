@@ -41,8 +41,8 @@ class PathToConstraint:
 
 		if c is None:
 			c = self.current_constraint.addChild(p)
-			print("add child", end=" ")
-			print(c.__repr__())
+			#print("add child", end=" ")
+			#print(c.__repr__())
 			#print("parent", c.parent)
 
 			# we add the new constraint to the queue of the engine for later processing

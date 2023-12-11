@@ -12,15 +12,15 @@ from .z3_expr.string import Z3String
 log = logging.getLogger("se.z3")
 
 class Z3Wrapper(object):
-	def __init__(self):
-		
+	def __init__(self, openai_wrap=None):
 		self.asserts = None
 		self.query = None
-		
 		self.z3_expr = None
 		self.pre_asserts = None
+		self.openai_wrap = openai_wrap
+		self.failedInputPreds = []
 
-	def findCounterexample(self, asserts, query, solution_limit=1):
+	def findCounterexample(self, asserts, query, input, solution_limit=1):
 		"""Tries to find a counterexample to the query while
 	  	 asserts remains valid."""
 		self.solver = Solver()
@@ -29,7 +29,7 @@ class Z3Wrapper(object):
 		#self.asserts = self._coneOfInfluence(asserts,query)
 
 		self.asserts = asserts
-		res = self._findModel()
+		res = self._findModel(input)
 		log.debug("Query -- %s" % self.query)
 		log.debug("Asserts -- %s" % asserts)
 		log.debug("Cone -- %s" % self.asserts)
@@ -54,7 +54,7 @@ class Z3Wrapper(object):
 			ws = ws + new_ws
 		return cone
 
-	def _findModel(self):
+	def _findModel(self, inputs):
 		
 		self.solver.push()
 		self.z3_expr = Z3Integer()
@@ -63,11 +63,15 @@ class Z3Wrapper(object):
 			pre_asserts = self.z3_expr.preAssertsToZ3(self.pre_asserts, self.solver)
 			for assert_expr in pre_asserts:
 				self.solver.assert_exprs(assert_expr)
+		
+		if self.failedInputPreds != None and len(self.failedInputPreds) > 0:
+			self.z3_expr.toZ3(self.solver, self.failedInputPreds, None)
 
 		self.z3_expr.toZ3(self.solver,self.asserts,self.query)		
 
-
 		res = self.solver.check()
+		tmp = self.solver.assertions().__deepcopy__()
+		self.openai_wrap.add_constraint(tmp, inputs) ## specific slicing to get the constraint
 		if res == unsat:
 			return None
 
@@ -111,6 +115,8 @@ class Z3Wrapper(object):
 	def addPreAsserts(self, pre_asserts):
 		self.pre_asserts = pre_asserts
 		
+	def addFailedInputPred(self, pred):
+		self.failedInputPreds.append(pred)
 
 	def _get_solutions(self):
 		result = self.solver.check()

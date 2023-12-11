@@ -221,6 +221,6 @@ class LoopUnfolding(ast.NodeTransformer):
                     print('  ' * (indent + 1) + f'{child_name}: {child_value}')
 
 
-lp = LoopUnfolding("test4.py")
+lp = LoopUnfolding("test3.py")
 #lp.find_loop()
 print(lp.unfold_loop())

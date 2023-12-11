@@ -6,8 +6,12 @@ import os
 
 from .z3_wrap import Z3Wrapper
 from .path_to_constraint import PathToConstraint
+from .constraint import Constraint
+from .predicate import Predicate
 from .invocation import FunctionInvocation
+from .symbolic_types import SymbolicInteger, SymbolicStr
 from .symbolic_types import symbolic_type, SymbolicType
+from .openai_wrap import Openai_wrap
 
 log = logging.getLogger("se.conc")
 
@@ -33,10 +37,8 @@ class ExplorationEngine:
 		symbolic_type.SymbolicObject.SI = self.path
 
 		if solver == "z3":
-			self.solver = Z3Wrapper()
-		elif solver == "cvc":
-			from .cvc_wrap import CVCWrapper
-			self.solver = CVCWrapper()
+			self.openai_wrap = Openai_wrap()
+			self.solver = Z3Wrapper(self.openai_wrap)
 		else:
 			raise Exception("Unknown solver %s" % solver)
 
@@ -66,8 +68,6 @@ class ExplorationEngine:
 			log.debug("Maximum number of iterations reached, terminating")
 			return self.execution_return_values
 		while not self._isExplorationComplete():
-			#print("CONSTRAINTS", self.constraints_to_solve)
-			
 			selected = self.constraints_to_solve.popleft()
 			if selected.processed:
 				continue
@@ -77,7 +77,7 @@ class ExplorationEngine:
 			asserts, query = selected.getAssertsAndQuery()
 			#print("ASSERTS, QUERY", asserts, query)
 			self.solver.addPreAsserts(self.invocation.pre_asserts)
-			models = self.solver.findCounterexample(asserts, query, self.solution_limit)
+			models = self.solver.findCounterexample(asserts, query, self.symbolic_inputs, self.solution_limit)
 
 			if models == None or len(models) == 0:
 				continue
@@ -99,9 +99,17 @@ class ExplorationEngine:
 				log.info("Maximum number of iterations reached, terminating")
 				break
 
-	
-		print("self.generated", self.generated_inputs)
-		return self.generated_inputs, self.execution_return_values, self.path
+		gptRes = self.openai_wrap.full_conversation()
+		generetadInputs = []
+		for i in range(len(self.generated_inputs)):
+			lst = self.generated_inputs[i]
+			d = {}
+			for j in range(len(lst)):
+				d[lst[j][0]] = lst[j][1]
+			generetadInputs.append(d)
+		print("generetadInputs", generetadInputs)
+		print("gptRes", gptRes)
+		return generetadInputs, self.execution_return_values, self.path, gptRes
 
 	# private
 
@@ -153,9 +161,34 @@ class ExplorationEngine:
 		except:
 			self.generated_inputs.pop()
 			print("Unexpected error:")
-			self.createAssertion()
+			self.createFailedInputConstraint()
 	
 	#Creates assertion based on execution failure
-	def createAssertion(self):
-		print("Failed inputs", self.symbolic_inputs)
+	def createFailedInputConstraint(self):
+		
+		symbolic_expressions = []
+		for k in self.symbolic_inputs.keys():
+			arg_cons  = self.findArgCons(self.symbolic_inputs[k].getConcrValue())
+			st = arg_cons(k, self.symbolic_inputs[k].getConcrValue())
+			expr = ["==", st, self.symbolic_inputs[k].getConcrValue()]
+			se = arg_cons("se", 0, expr)
+			symbolic_expressions.append(se)
+		
+		se = symbolic_expressions[0]
+		for i in range(1, len(symbolic_expressions)):
+			expr = ["&", se, symbolic_expressions[i]]
+			se = SymbolicInteger("se", 0, expr)
+			
+		pred = Predicate(se, False)
+		self.solver.addFailedInputPred(pred)
+		model = self.solver.findCounterexample(None, None, self.solution_limit)
+		#print("model", model)
+		
+		
+	def findArgCons(self, val):
+		if isinstance(val, int):
+			return SymbolicInteger
+		elif isinstance(val, str):
+			return SymbolicStr
+		return SymbolicInteger
 

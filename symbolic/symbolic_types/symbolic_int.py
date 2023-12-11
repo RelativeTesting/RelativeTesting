@@ -48,20 +48,20 @@ ops =  [("add",    "+"  ),\
 def make_method(method,op,a):
 	
 	code  = "def %s(self,other):\n" % method
-	code += "	if isinstance(other, SymbolicInteger): \n"
-	code += "		self_parent = find_parent(self) \n"
-	code += "		other_parent = find_parent(other) \n"	
-	code += "		if self_parent != other_parent: \n"
-	code += "			ret = self.getConcrValue() == int(other) \n"
-	code += "			expr = ['==', self, int(other)]\n"
-	code += "			se = SymbolicInteger('se', ret, expr) \n"
-	code += "			SymbolicObject.SI.arithmeticBranch(ret, se)\n"
+	# code += "	if isinstance(other, SymbolicInteger): \n"
+	# code += "		self_parent = find_parent(self) \n"
+	# code += "		other_parent = find_parent(other) \n"	
+	# code += "		if self_parent != other_parent: \n"
+	# code += "			ret = self.getConcrValue() == int(other) \n"
+	# code += "			expr = ['==', self, int(other)]\n"
+	# code += "			se = SymbolicInteger('se', ret, expr) \n"
+	# code += "			SymbolicObject.SI.arithmeticBranch(ret, se)\n"
 
-	code += "	else: \n"
-	code += "		ret = self.getConcrValue() == int(other) \n"
-	code += "		expr = ['==', self, int(other)]\n"
-	code += "		se = SymbolicInteger('se', ret, expr) \n"
-	code += "		SymbolicObject.SI.arithmeticBranch(ret, se)\n"
+	# code += "	else: \n"
+	# code += "		ret = self.getConcrValue() == int(other) \n"
+	# code += "		expr = ['==', self, int(other)]\n"
+	# code += "		se = SymbolicInteger('se', ret, expr) \n"
+	# code += "		SymbolicObject.SI.arithmeticBranch(ret, se)\n"
 	code += "	return self._op_worker(%s,lambda x,y : x %s y, \"%s\")" % (a,op,op)
 	locals_dict = {}
 	exec(code, globals(), locals_dict)

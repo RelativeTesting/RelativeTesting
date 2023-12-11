@@ -54,7 +54,7 @@ class ExplorationEngine:
 	def explore(self, max_iterations=0):
 		if self.invocation.pre_asserts != None and len(self.invocation.pre_asserts) > 0:
 			log.info("Adding pre-asserts")
-			model = self.solver.findCounterexample(self.invocation.pre_asserts, None , self.solution_limit )
+			model = self.solver.findCounterexample(self.invocation.pre_asserts, None , self.symbolic_inputs, self.solution_limit )
 			if model == None:
 				log.info("Pre-asserts are unsatisfiable, terminating")
 				return self.generated_inputs, self.execution_return_values, self.path
@@ -99,8 +99,8 @@ class ExplorationEngine:
 				log.info("Maximum number of iterations reached, terminating")
 				break
 
-		gptRes = None
-		#gptRes = self.openai_wrap.full_conversation()
+		#gptRes = None
+		gptRes = self.openai_wrap.full_conversation()
 		generetadInputs = []
 		for i in range(len(self.generated_inputs)):
 			lst = self.generated_inputs[i]
@@ -182,7 +182,7 @@ class ExplorationEngine:
 			
 		pred = Predicate(se, False)
 		self.solver.addFailedInputPred(pred)
-		models = self.solver.findCounterexample(None, None, self.solution_limit)
+		models = self.solver.findCounterexample(None, None, self.symbolic_inputs, self.solution_limit)
 		if models == None or len(models) == 0:
 			return
 			

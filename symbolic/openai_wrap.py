@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import inspect
 import ast
 import json
+import z3
 class Openai_wrap:
     def __init__(self) -> None:
         self.constraints = {}
@@ -29,9 +30,8 @@ class Openai_wrap:
     def simplfy_constraint(self, constraints):
         c_line = ""
         for i, constraint in enumerate(constraints):
-            #print("constraint", constraint)
             res = self._simplify_constraint(constraint)
-            res = res.replace("Not Not ", "")
+            res = res.replace("Not (Not ", "(")
 
             if i == 0:
                 c_line += res
@@ -42,15 +42,28 @@ class Openai_wrap:
             
     
     def _simplify_constraint(self, constraint):
-        children = constraint.children()
-        if len(children) == 0:
+        if z3.is_not(constraint):
+            return "Not (" + self._simplify_constraint(constraint.children()[0]) + ")"
+        elif z3.is_and(constraint):
+            children = constraint.children()
+            children = [self._simplify_constraint(child) for child in children]
+            return " and ".join(children)
+        elif z3.is_or(constraint):
+            children = constraint.children()
+            children = [self._simplify_constraint(child) for child in children]
+            return " or ".join(children)
+        elif z3.is_bool(constraint):
+            child1, child2 = constraint.children()
+            return self._simplify_constraint(child1) + self._simplify_constraint(child2)
+        elif isinstance(constraint, z3.ArithRef):
+            if isinstance(constraint, z3.IntNumRef) or isinstance(constraint, z3.BitVecNumRef) or isinstance(constraint, z3.SeqRef):
+                return ""
+            return str(constraint.children()[0])
+        elif isinstance(constraint, z3.IntNumRef) or isinstance(constraint, z3.BitVecNumRef) or isinstance(constraint, z3.SeqRef):
             return ""
-        elif len(children) == 1:
-            return  "Not " + self._simplify_constraint(children[0]) 
-        elif len(children) == 2:
-            return self._simplify_constraint(children[1])
         else:
-            return "(" + str(children[0]) + ")"
+            return str(constraint)
+            
     
     def general_prompt(self):
         return "You are a constraint solver. You will be provided with list of queries. Each query is a list of constraints. \
@@ -81,6 +94,9 @@ class Openai_wrap:
     def full_conversation(self):
         system_prompt = self.general_prompt()
         constraint_promt = self.constraint_prompt()
+
+        print("GPT Prompt:",constraint_promt)
+
         completion = self.client.chat.completions.create(
         model="gpt-4",
         messages=[
@@ -94,6 +110,7 @@ class Openai_wrap:
 
         combine_gpt = []
         inputs = list(self.constraints.values())
+
         for i, sol in enumerate(gpt_res):
             if sol == None:
                 continue
@@ -106,7 +123,7 @@ class Openai_wrap:
                     res[key] = val
             combine_gpt.append(res)
         
-        print("GPT Prompt:",constraint_promt)
+        
         #print("GPT Result:", combine_gpt)
 
         return combine_gpt

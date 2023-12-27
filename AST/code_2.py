@@ -1,7 +1,10 @@
 letters = "abcdefgh"
 
 knight_hor = input("Please enter horizontal position of the knight (a,b,c,d,e,f,g,h): ").lower()
-
+i=0
+while i<10:
+  x=int(input("Please enter integer something:"))
+  i+=1
 if len(knight_hor)!=1 or not knight_hor.isalpha(): 
   print("Horizontal input for knight is not a letter")
 elif knight_hor not in letters:

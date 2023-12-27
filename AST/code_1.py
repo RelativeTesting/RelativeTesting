@@ -7,6 +7,9 @@ flight_v = int(input("Please enter the average flight velocity (m/s): ")) #m/s
 landing_v = int(input("Please enter the average landing velocity (m/s): ")) #m/s
 lower= int(input().toLower())
 
+for i in range(10):
+    x=input("Please enter something:")
+
 t1 = take_off_distance*1000 / take_off_v
 t2 = flight_distance*1000 / flight_v
 t3 = landing_distance*1000 / landing_v

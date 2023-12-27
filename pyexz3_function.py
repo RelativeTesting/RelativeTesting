@@ -1,13 +1,9 @@
-# Copyright: see copyright.txt
-
-import os
-import sys
 import logging
-import traceback
 from optparse import OptionParser
 
 from RelativeTesting.symbolic.loader import *
 from RelativeTesting.symbolic.explore import ExplorationEngine
+
 
 def pyexz3_function(file_path):
 	sys.path = [os.path.abspath(os.path.join(os.path.dirname(__file__)))] + sys.path

@@ -9,7 +9,7 @@ class Openai_wrap:
     def __init__(self) -> None:
         self.constraints = {}
         load_dotenv()
-        self.client =  openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def reset(self):
         self.constraints = {}
@@ -106,7 +106,10 @@ class Openai_wrap:
         )
         
         gpt_res = completion.choices[0].message.content
-        gpt_res = json.loads(gpt_res)
+        try:
+            gpt_res = json.loads(gpt_res)
+        except:
+            return []
 
         combine_gpt = []
         inputs = list(self.constraints.values())

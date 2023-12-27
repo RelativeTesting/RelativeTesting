@@ -1,3 +1,3 @@
 def test1():
-    for i in range(10):
-        print(i)
+    for x in "hello":
+        print(x)

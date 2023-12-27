@@ -85,3 +85,10 @@ def test_str(x,y):
     if y > 8:
         return 2
     return 1
+
+def test():
+    x = int(input())
+    if x > 3:
+        return 1
+    return 2
+

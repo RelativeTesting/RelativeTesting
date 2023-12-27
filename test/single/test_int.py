@@ -67,3 +67,10 @@ DONE:
 Pre Assertionlar dynamic hale getirelecek / 2-3 Hafta 
 
 """
+
+
+def test(x):
+    if x > 3:
+        return 1
+    return 2
+

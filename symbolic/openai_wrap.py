@@ -106,7 +106,10 @@ class Openai_wrap:
         )
         
         gpt_res = completion.choices[0].message.content
-        gpt_res = json.loads(gpt_res)
+        try:
+            gpt_res = json.loads(gpt_res)
+        except:
+            return []
 
         combine_gpt = []
         inputs = list(self.constraints.values())

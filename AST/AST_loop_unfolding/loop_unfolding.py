@@ -251,7 +251,7 @@ class LoopUnfolding(ast.NodeTransformer):
                 step = fourth[2]
             pre = second + " = " + str(start) + "\n"
             cond = "if " + second + " < " + str(stop) + ":\n"
-            past = [second + " += " + str(step) + "\n"]
+            past = ["\t" + second + " += " + str(step) + "\n"]
         else:
             idx = second + "_idx"
             pre = idx + " = 0\n"
@@ -302,9 +302,9 @@ code2 += "\t\tx += 1\n"
 code2 += "\t\ty += 1\n"
 code2 += "\t\tprint(x, y)\n"
 
-code3 = "while x < 10:\n"
-code3 += "\tx += 1\n"
-code3 += "\ty += 1\n"
+code3 = "for i in range(10):\n"
+code3 += "\tx = 1\n"
+code3 += "\ty = 1\n"
 code3 += "\tprint(x, y)\n"
 
 

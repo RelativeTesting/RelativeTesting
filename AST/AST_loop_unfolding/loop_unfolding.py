@@ -238,7 +238,7 @@ class LoopUnfolding(ast.NodeTransformer):
             fourth = fourth.replace("range", "")
             fourth = fourth.replace("(", "")
             fourth = fourth.replace(")", "")
-            fourth = fourth.replace(" ", "")
+            fourth = fourth.replace(":", "")
             fourth = fourth.split(",")
             fourth = [int(i) for i in fourth]
             if len(fourth) == 1:

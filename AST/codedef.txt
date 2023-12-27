@@ -1,6 +1,3 @@
-from symbolic.args import * 
-@types(param1="int", param2="int", param3="int")
-@symbolic(param1="@param1 >= 100 and param1 <= 200", param2="@param2 > 100", param3="@param3 > 0 and param3 < 10000")
 def power(param1, param2, param3):
 	take_off_distance = 300 #km
 	flight_distance = 384400 #km

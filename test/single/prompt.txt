@@ -2,9 +2,13 @@ To use it in the Z3 library, I need to define a variable as follows for each var
 The Types statement specifies the type, such as int, str, float.
 The concrete expression is used to define predefined values, such as y equals 8.
 The symbolic expression allows each variable to be defined symbolically according to constraints.
-If I want to make more than one definition, I must write an "and" between them. For example ((x > y and x < 20) and (y > 6))
+If I want to make more than one definition, I must write an "and" or "or" between them in inside of string
+such as "@(param1 > 15) and (param1 < 30)" , "@(param1 == 15) or (param1 == 5)"
+On the other hand you must not combine expression such as "@(100 < param1 < 200). You must be write seperately such as
+"@param1 >= 100 and param1 <= 200"
+Also,if a variable is not concretely defined, do not give  the concrete constraint expression
 You can see a one example code that fits these definitions below:
 @types(x="int", y="int")
-@symbolic(x="@((x > y and x < 20) and (y > 6))")
+@symbolic(param1 = "@(param1 > 15) and (param1 < 30)", param2 = "@(param2 != 0) or (param2 != 15)")
 @concrete(y=8)
 Now I will share a code with you below:

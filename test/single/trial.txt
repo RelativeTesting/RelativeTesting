@@ -1,3 +1,0 @@
-take_off_v should be integer and divisible by 5
-flight_v  should be integer and greater than 100
-landing_v should be integer and smaller than 10000

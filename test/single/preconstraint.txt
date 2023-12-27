@@ -1,0 +1,4 @@
+take_off_v should be positive integer
+take_off_v should be between 100 and 200 
+flight_v  should be integer and greater than 100 
+landing_v should be positive integer and smaller than 10000 but can not be equal 0 

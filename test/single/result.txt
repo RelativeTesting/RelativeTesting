@@ -1,2 +1,2 @@
 @types(param1="int", param2="int", param3="int")
-@symbolic(param1="@((param1 % 5 == 0))", param2="@((param2 > 100))", param3="@((param3 < 10000))")
+@symbolic(param1="@param1 >= 100 and param1 <= 200", param2="@param2 > 100", param3="@param3 > 0 and param3 < 10000")

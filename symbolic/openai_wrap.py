@@ -9,7 +9,7 @@ class Openai_wrap:
     def __init__(self) -> None:
         self.constraints = {}
         load_dotenv()
-        self.client =  openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def reset(self):
         self.constraints = {}

@@ -82,23 +82,27 @@ class Z3Expression(object):
 			op = expr[0]
 			args = [ self._astToZ3Expr(a,solver,env) for a in expr[1:] ]
 			z3_l,z3_r = args[0],args[1]
-
 			return self._opToZ3Expr(op,z3_l,z3_r,solver,env)
 		
 		elif isinstance(expr, list) and len(expr) == 2:
 			op = expr[0]
 			arg =  self._astToZ3Expr(expr[1],solver,env)
-			#print("come here", "expression is", type(expr).__name__, expr)
-			#print("op", op, "arg", arg, "type", type(arg).__name__)
 			tmp =  self._getConstant(expr[1], solver)
-			#print("deneme", tmp, type(tmp).__name__, "type expr1", type(expr[1]).__name__)
 			if op == "str.len":
 				return Length(arg)
+		elif isinstance(expr, list) and len(expr) > 3:
+			op = expr[0]
+			if op == "slice":
+				if len(expr) == 4:
+					val, l, u = expr[1], expr[2], expr[3]
+					return SubString(val, l, u-l)
+				elif len(expr) == 5:
+					val, l, u, s = expr[1], expr[2], expr[3], expr[4]
+					return SubString(val, l, u, s)
 
 		elif isinstance(expr, SymbolicInteger) or isinstance(expr, SymbolicStr):
 			if expr.isVariable():
 				if env == None or expr.name not in env:
-					#print("Getting variable", expr.name)
 					return self._getVariable(expr,solver)
 				else:
 					return env[expr.name]

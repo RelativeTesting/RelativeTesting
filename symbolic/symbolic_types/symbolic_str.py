@@ -40,11 +40,24 @@ class SymbolicStr(SymbolicObject, str):
         if isinstance(key, slice):
             start = key.start if key.start is not None else 0
             stop = key.stop if key.stop is not None else self.__len__()
+            print()
             return self._do_sexpr([self, start, stop],
-                                  lambda x, y, z: str.__getitem__(x, slice(y, z)), "slice", SymbolicStr.wrap)
-        return self._do_sexpr([self, key], lambda x, y: str.__getitem__(x, y),
+                                  lambda x, y, z: self.str_getitem_helper(x,y,z), "slice", SymbolicStr.wrap)
+        return self._do_sexpr([self, key], lambda x, y: self.str_getitem_helper(x,y),
                               "getitem", SymbolicStr.wrap)
-
+    def str_getitem_helper(self, x, y, z = None):
+        if z == None:
+            print("x", x, "y", y, "z", z)
+            if len(x) < y:
+                return ""
+            else:
+                return str.__getitem__(x, y)
+        else:
+            if len(x) < y:
+                return ""
+            else:
+                return str.__getitem__(x, slice(y, z))
+    
     def find(self, findstr, beg=0):
         return self._do_sexpr([self, findstr, beg],
                               lambda x, y, z: str.find(x, y, z),

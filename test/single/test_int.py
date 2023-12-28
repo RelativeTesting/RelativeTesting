@@ -1,6 +1,7 @@
 from symbolic.args import *
 
 @types(x="str", y="str")
+@symbolic(x = "@x > 'a'", z = "@z != 4", y = "@len(y) > 2 and y[1] == 'a'",)
 def test_int(x, y, z):
 
     if (z > 3 and z < 10):
@@ -8,11 +9,11 @@ def test_int(x, y, z):
             return 1
         else:
             return 2
-    if x == "bbbb":
-        return 1
+    # if x == "bbbb":
+    #     return 1
 
-    if y < "ddas":
-        return 2
+    # if y < "ddas":
+    #     return 2
 
     # if x + y == "araba":
     #     return 9 
@@ -44,33 +45,14 @@ def test_int(x, y, z):
 """
 TODO:
 String Methodlari eklenecek / 1 hafta
-Z3 kaynakli unicode bug'i çözülmeli / 1 hafta
-Web Interface Yapilacak / 2 hafta
-
-
-Loop repeating parameters:
-    Loop içerisinde dönen parametreler için değişecebilecek inputlar yaratmak.
-
-
-Input Wrapping 
-For i to 10
-    num = int(input())
-    if (num > 2):
-        ....
-    else
-        ....
 
 If time permits
-    List ve Dictionary gibi typelar
+    float, boolean types
 
 DONE:
 Pre Assertionlar dynamic hale getirelecek / 2-3 Hafta 
-
+Loop repeating parameters:
+    Loop içerisinde dönen parametreler için değişecebilecek inputlar yaratmak.
+Web Interface Yapilacak / 2 hafta
 """
-
-
-def test(x):
-    if x > 3:
-        return 1
-    return 2
 

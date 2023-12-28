@@ -255,7 +255,6 @@ class LoopUnfolding(ast.NodeTransformer):
             fourth = fourth.replace(")", "")
             fourth = fourth.replace(":", "")
             fourth = fourth.split(",")
-            fourth = [int(i) for i in fourth]
             if len(fourth) == 1:
                 stop = fourth[0]
             elif len(fourth) == 2:

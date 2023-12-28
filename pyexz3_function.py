@@ -5,7 +5,7 @@ from RelativeTesting.symbolic.loader import *
 from RelativeTesting.symbolic.explore import ExplorationEngine
 
 
-def pyexz3_function(file_path):
+def pyexz3_function(file_path, test_case_count):
     sys.path = [os.path.abspath(os.path.join(os.path.dirname(__file__)))] + sys.path
     sys.path.append(os.path.join(os.path.dirname(__file__), 'RelativeTesting'))
     print(sys.path)
@@ -18,8 +18,6 @@ def pyexz3_function(file_path):
                       help="Generate a DOT graph of execution tree")
     parser.add_option("-m", "--max-iters", dest="max_iters", type="int", help="Run specified number of iterations",
                       default=0)
-    parser.add_option("-c", "--solution-count", dest="solution_count", type="int", help="Number of solutions to find",
-                      default=1)
     parser.add_option("--cvc", dest="cvc", action="store_true", help="Use the CVC SMT solver instead of Z3",
                       default=False)
     parser.add_option("--z3", dest="cvc", action="store_false", help="Use the Z3 SMT solver")
@@ -45,7 +43,7 @@ def pyexz3_function(file_path):
 
     result = None
     try:
-        engine = ExplorationEngine(app.createInvocation(), solver=solver, solution_limit=options.solution_count)
+        engine = ExplorationEngine(app.createInvocation(), solver=solver, solution_limit=test_case_count)
         generatedInputs, returnVals, path, gpt_ans = engine.explore(options.max_iters)
         # check the result
         result = app.executionComplete(returnVals)

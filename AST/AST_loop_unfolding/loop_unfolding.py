@@ -342,13 +342,7 @@ def conversion_total(code, loop_unfolding_enabled=False, loop_count=3):
     return code, function_name
 
 
-code = """
-def func():
-    if True:
-        for i in range(10):
-            x = input()
-            print(y)
-"""
+
 
 code1 = """
 def func():
@@ -495,6 +489,13 @@ def func():
             print(x)
 
     print("world")
+"""
+code10 = """
+def func():
+    if True:
+        for i in range(10):
+            x = input()
+            print(y)
 """
 
 #print(conversion_total(code9, loopUnfoldingEnabled=True, loop_count=3))

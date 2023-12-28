@@ -1,4 +1,6 @@
 import ast
+import random
+import re
 import astor
 
 
@@ -312,14 +314,30 @@ def check_single_function(code):
         return False
 
 
-def conversion_total(code, loopUnfoldingEnabled=False, loop_count=3):
-    if not check_single_function(code):
+def extract_function_names(code: str):
+    function_pattern = r"def\s+([a-zA-Z_][a-zA-Z0-9_]+)\s*\("
+    match = re.search(function_pattern, code, re.MULTILINE)
+    if match:
+        return match.group(1)
+    else:
+        return None
+
+
+def conversion_total(code, loop_unfolding_enabled=False, loop_count=3):
+    # if it is function get the function name if not generate a function name
+    function_name = "wrapper_" + str(random.randint(0, 10000000000))
+    if check_single_function(code):
+        new_name = extract_function_names(code)
+        print("new_name", new_name)
+        if new_name:
+            function_name = new_name
+    else:
         code = convert_code_to_function(code)
 
-    if loopUnfoldingEnabled:
+    if loop_unfolding_enabled:
         lp = LoopUnfolding(code, loop_count)
-        return lp.unfold_loop()
-    return code
+        code = lp.unfold_loop()
+    return code, function_name
 
 
 # code = """

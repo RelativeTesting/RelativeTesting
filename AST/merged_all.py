@@ -69,8 +69,7 @@ def type_user_inputs2(code):
     return visitor.user_inputs_all
 
 
-def detect_user_inputs2(code_str, function_name, destination_folder):
-    code = code_str
+def detect_user_inputs2(code: str, function_name):
     tree = ast.parse(code)
     visitor = InputVisitor()
     visitor.visit(tree)
@@ -85,7 +84,7 @@ def detect_user_inputs2(code_str, function_name, destination_folder):
         if isinstance(node, ast.FunctionDef):
             updated_body.append(node.body)
     function_node = ast.FunctionDef(
-        name=function_name + "_final",
+        name=function_name,
         args=ast.arguments(
             args=[ast.arg(arg=list(visitor.user_inputs.keys())[i], annotation=None) for i in
                   range(len(visitor.user_inputs.keys()))],
@@ -99,19 +98,18 @@ def detect_user_inputs2(code_str, function_name, destination_folder):
         decorator_list=[],
         returns=None
     )
-    with open(destination_folder + function_name + '_final.py', "w") as f:
-        f.write(astor.to_source(function_node))
-    return visitor.user_inputs
+
+    return astor.to_source(function_node)
 
 
-def convert_all(user_input: str, uuid: str, loop_unroll: bool, unroll_count: int):
-    my_code = conversion_total(user_input, loop_unroll, unroll_count)
-    detect_user_inputs2(my_code, "u" + str(uuid), 'media/')
+def convert_all(user_input: str, loop_unroll: bool, unroll_count: int):
+    my_code, function_name = conversion_total(user_input, loop_unroll, unroll_count)
+    return detect_user_inputs2(my_code, function_name)
 
 
 if __name__ == "__main__":
-
-    with open("AST/code_2.py", 'r') as f:
-        code = f.read()
-    mycode = conversion_total(code, loopUnfoldingEnabled=True, loop_count=3)
-    #detect_user_inputs2(mycode)
+    print("AST/merged_all.py")
+    # with open("AST/code_2.py", 'r') as f:
+    #    code = f.read()
+    # mycode = conversion_total(code, loopUnfoldingEnabled=True, loop_count=3)
+    # detect_user_inputs2(mycode)

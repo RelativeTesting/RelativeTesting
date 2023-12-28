@@ -52,8 +52,6 @@ class LoopObject:
         return s
 
 
-# the files in the desired directory
-
 class LoopUnfolding(ast.NodeTransformer):
     def __init__(self, code, unfold_count=3):
 
@@ -97,12 +95,10 @@ class LoopUnfolding(ast.NodeTransformer):
         def_node, loop_nodes = self.find_loop()
         if def_node is None:
             return
-        if loop_nodes is []:
+        if loop_nodes == [] or loop_nodes == None:
             return "".join(self.code[def_node.lineno - 1: def_node.end_lineno])
 
         start_func = def_node.lineno
-        first_line = self.code[start_func]
-        spacing = len(first_line) - len(first_line.lstrip())
 
         s = "".join(self.code[start_func - 1])
 
@@ -110,22 +106,19 @@ class LoopUnfolding(ast.NodeTransformer):
             node = lp.loop_node
             if start_func < node.lineno:
                 interleaved = self.code[start_func: node.lineno - 1]
-                interleaved = self.unfold_interleaved(spacing, interleaved)
                 s += "".join(interleaved)
 
             start_func = node.end_lineno
-            unfolded = self._unfolding(lp, spacing)
-            unfolded = ["\t" + line for line in unfolded]
+            unfolded = self._unfolding(lp)
             s += "".join(unfolded)
 
         if start_func < def_node.end_lineno:
             interleaved = self.code[start_func: def_node.end_lineno]
-            interleaved = self.unfold_interleaved(spacing, interleaved)
             s += "".join(interleaved)
 
         return s
 
-    def _unfolding(self, lp, spacing):
+    def _unfolding(self, lp):
         if isinstance(lp, LoopObject):
             node = lp.loop_node
 
@@ -133,76 +126,100 @@ class LoopUnfolding(ast.NodeTransformer):
                 codes = []
                 cond = self.code[node.lineno - 1]
 
-                right_shift = ""
-                if len(cond) - len(cond.lstrip()) > spacing:
-                    right_shift = cond[spacing:len(cond) - len(cond.lstrip())]
+                ## shift of loop
+                loop_shift = cond[:len(cond) - len(cond.lstrip())]
+                
+                print("loop_shift", loop_shift, len(loop_shift))
+                i = 0
+                first_line = self.code[node.lineno + i]
+                while first_line.lstrip() == "":
+                    i += 1
+                    first_line = self.code[node.lineno + i]
+
+                #shift of first line
+                first_line_shift_len = len(first_line) - len(first_line.lstrip())
+                first_line_shift = first_line[len(loop_shift):first_line_shift_len]
 
                 if isinstance(node, ast.For):
-                    pre, cond, past = self._forloop_helper(cond, right_shift)
+                    pre, cond, past = self._forloop_helper(cond, loop_shift, first_line_shift)
                     codes.append(pre)
 
-                if isinstance(node, ast.While):
+                elif isinstance(node, ast.While):
                     cond = cond.replace("while", "if")
-                    cond = cond.lstrip()
-                    cond = right_shift + cond
                 
                 lines = self.code[node.lineno: node.end_lineno]
-                first = lines[0]
-
-                spacing2 = len(first) - len(first.lstrip())
-                lines = self.unfold_interleaved(spacing2, lines, right_shift)
+                lines_new = []
+                for line in lines:
+                    if line.lstrip() == "":
+                        lines_new.append("\n")
+                    else:
+                        lines_new.append("\t" + loop_shift + line[first_line_shift_len:])
+                lines = lines_new
+               
 
                 for i in range(self.unfold_count):
-                    cond_tmp = "\t" * i + cond
-                    codes.append(cond_tmp)
+                    codes.append("\t" * i + cond)
                     if isinstance(node, ast.For):
-                        codes += ["\t" * (i) + line for line in past]
-                    lines_tmp = ["\t" * i + line for line in lines]
-                    codes += lines_tmp
-
+                        codes += ["\t" * i + line for line in past]
+                    codes += ["\t" * i + line for line in lines]
+                    
                 assert_cond = cond.replace("if", "assert")
                 assert_cond = assert_cond.replace(":", "")
                 codes.append(assert_cond)
+
                 return codes
             else:
                 codes = []
                 cond = self.code[node.lineno - 1]
 
-                right_shift = ""
-                if len(cond) - len(cond.lstrip()) > spacing:
-                    right_shift = cond[spacing:len(cond) - len(cond.lstrip())]
+                ## shift of loop
+                loop_shift = cond[:len(cond) - len(cond.lstrip())]
+                
+                print("loop_shift", loop_shift, len(loop_shift))
+                i = 0
+                first_line = self.code[node.lineno + i]
+                while first_line.lstrip() == "":
+                    i += 1
+                    first_line = self.code[node.lineno + i]
 
+                #shift of first line
+                first_line_shift_len = len(first_line) - len(first_line.lstrip())
+                first_line_shift = first_line[len(loop_shift):first_line_shift_len]
+
+                # Type of loop
                 if isinstance(node, ast.For):
-                    pre, cond, past = self._forloop_helper(cond, right_shift)
-                    codes.append(cond)
-                    codes += past
+                    pre, cond, past = self._forloop_helper(cond, loop_shift, first_line_shift)
+
                 elif isinstance(node, ast.While):
                     cond = cond.replace("while", "if")
-                    cond = cond.lstrip()
-                    cond = right_shift + cond
-                    codes.append(cond)
 
-                # lp.sort_children()
+                codes.append(cond)
+                
                 start_lineno = node.lineno + 1
-                first = self.code[start_lineno - 1]
-                print("first", first)
-                spacing = len(first) - len(first.lstrip())
                 for child in lp.children:
                     if start_lineno < child.loop_node.lineno:
                         interleaved = self.code[start_lineno - 1: child.loop_node.lineno - 1]
-                        interleaved = self.unfold_interleaved(spacing, interleaved, right_shift)
+                        interleaved_new = []
+                        for line in interleaved:
+                            if line.lstrip() == "":
+                                interleaved_new.append("\n")
+                            else:
+                                interleaved_new.append("\t" + loop_shift + line[first_line_shift_len:])
+                        codes += interleaved_new
 
-                        codes += interleaved
-
-                    child_codes = self._unfolding(child, spacing)
-                    child_codes = ["\t" + right_shift + line for line in child_codes]
+                    child_codes = self._unfolding(child)
                     codes += child_codes
                     start_lineno = child.loop_node.end_lineno + 1
 
                 if start_lineno <= node.end_lineno:
                     last = self.code[start_lineno - 1: node.end_lineno]
-                    last = self.unfold_interleaved(spacing, last, right_shift)
-                    codes += last
+                    last_new = []
+                    for line in last:
+                        if line.lstrip() == "":
+                            last_new.append("\n")
+                        else:
+                            last_new.append("\t" + loop_shift + line[first_line_shift_len:])
+                    codes += last_new
 
                 res = []
                 if isinstance(node, ast.For):
@@ -218,24 +235,9 @@ class LoopUnfolding(ast.NodeTransformer):
 
             return res
 
-    def unfold_interleaved(self, spacing, interleaved, shift=""):
-        interleaved_new = []
-        for line in interleaved:
-            if line == "\n":
-                interleaved_new.append(line)
-                continue
-
-            spacing_line = len(line) - len(line.lstrip())
-            if spacing_line > spacing:
-                new_line = "\t" + shift +  line[spacing:]
-                interleaved_new.append(new_line)
-            else:
-                new_line = "\t" + shift + line.lstrip()
-                interleaved_new.append(new_line)
-        return interleaved_new
-
-    def _forloop_helper(self, statement, shift):
-        statement = statement.lstrip()
+    def _forloop_helper(self, code, loop_shift, first_line_shift):
+        
+        statement = code.lstrip()
         first = statement[:statement.find(" ")]
         statement = statement[statement.find(" ") + 1:]
         second = statement[:statement.find(" ")]
@@ -263,16 +265,16 @@ class LoopUnfolding(ast.NodeTransformer):
                 start = fourth[0]
                 stop = fourth[1]
                 step = fourth[2]
-            pre = shift + second + " = " + str(start) + "\n"
-            cond = shift + "if " + second + " < " + str(stop) + ":\n"
+            pre = loop_shift + second + " = " + str(start) + "\n"
+            cond = loop_shift + "if " + second + " < " + str(stop) + ":\n"
             print("cond", cond)
-            past = ["\t" + shift + second + " += " + str(step) + "\n"]
+            past = ["\t" + loop_shift + second + " += " + str(step) + "\n"]
         else:
             idx = second + "_idx"
-            pre = shift + idx + " = 0\n"
-            cond = shift + "if " + idx + " < len(" + fourth + "):\n"
-            past = ["\t" + shift  + second + " = " + fourth + "[" + idx + "]\n"]
-            past += ["\t" + shift + idx + " += 1\n"]
+            pre = loop_shift + idx + " = 0\n"
+            cond = loop_shift + "if " + idx + " < len(" + fourth + "):\n"
+            past = ["\t" + loop_shift + second + " = " + fourth + "[" + idx + "]\n"]
+            past += ["\t" + loop_shift + idx + " += 1\n"]
 
         return pre, cond, past
 
@@ -340,88 +342,159 @@ def conversion_total(code, loop_unfolding_enabled=False, loop_count=3):
     return code, function_name
 
 
-# code = """
-# def func():
-#     if True:
-#         for i in range(10):
-#             x = input()
-#             print(y)
-# """
+code = """
+def func():
+    if True:
+        for i in range(10):
+            x = input()
+            print(y)
+"""
 
-# code1 = """
-# def func():
-#     if True:
-#         x = int(input())
-#         while x < 10:
-#             x += 1
-#             print(x)
-# """
+code1 = """
+def func():
+    if True:
+        x = int(input())
+        while x < 10:
+            x += 1
+            print(x)
+"""
 
-# code2 = """
-# def func():
-#     print("hello")
-#     for i in range(10):
-#         print(i)
+code2 = """
+def func():
+    print("hello")
+    for i in range(10):
+        print(i)
     
-#     print("world")
+    print("world")
 
-#     for i in range(10):
-#         print(i)
+    for i in range(10):
+        print(i)
 
-#     if True:
-#         print("hello")
-# """
+    if True:
+        print("hello")
+"""
 
-# code3 = """
-# def func():
-#     print("hello")
+code3 = """
+def func():
 
-#     if True:
-#         for x in range(10):
-#             if x > 5:
-#                 for y in range(10):
-#                     print(x, y)
-#             print(x)
+    print("hello")
 
-#     print("world")
-# """
+    if True:
+    
+        for x in range(10):
+        
+            if x > 5:
+            
+                for y in range(10):
+                
+                    print(x, y)
 
-# code4 = """
-# def func():
-#     print("hello")
+            print(x)
+
+    print("world")
+"""
+
+code4 = """
+def func():
+    print("hello")
 
     
-#     for x in range(10):
-#         if x > 5:
-#             for y in range(10):
-#                 print(x, y)
-#         print(x)
+    for x in range(10):
+        if x > 5:
+            for y in range(10):
+                print(x, y)
+        print(x)
 
-#     print("world")
-# """
+    print("world")
+"""
 
-# code4 = """
-# def func():
+code4 = """
+def func():
 
-#     print("zkna1")
+    print("zkna1")
 
-#     print("zkna2")
-#     print("zkna3")
-#     print("zkna4")
+    print("zkna2")
+    print("zkna3")
+    print("zkna4")
 
-#     while True:
-#         print("zkna")
-#         print("zkna")
-#         print("zkna")
-#         print("zkna")
-#         if "yes" == "yes":
-#             print("zkna")
-#             print("zkna")
-#         print("zkna")
-#     print("zkna")
-#     print("zkna")
+    while True:
+        print("zkna")
+        print("zkna")
+        print("zkna")
+        print("zkna")
+        if "yes" == "yes":
+            print("zkna")
+            print("zkna")
+        print("zkna")
+    print("zkna")
+    print("zkna")
 
-# """
+"""
+
+code5 = """
+def func():
+    for i in range(5):
+    
+        print(i)
+    if x < 5:
+        for i in range(10):
+            
+            print(i)
+    else:
+        print("hello")
+""" 
+
+code6 = """
+def func():
+    for i in range(5):
+    
+        print(i)
+""" 
 
 
-# print(conversion_total(code4, loopUnfoldingEnabled=True, loop_count=3))
+code7 = """
+def func():
+
+    print("hello")
+
+    if True:
+    
+        for x in range(10):
+        
+            
+            for y in range(10):
+            
+                print(x, y)
+                    
+            print(x)
+
+    print("world")
+"""
+
+code8 = """
+x = input()
+
+if x >4:
+    print(x)
+"""
+
+code9 = """
+def func():
+
+    print("hello")
+
+    if True:
+    
+        for x in range(10):
+        
+            if x > 5:
+                for y in range(10):
+                
+                    print(x, y)
+                    
+            print(x)
+
+    print("world")
+"""
+
+#print(conversion_total(code9, loopUnfoldingEnabled=True, loop_count=3))

@@ -314,7 +314,7 @@ def check_single_function(code):
         return False
 
 
-def extract_function_names(code: str):
+def extract_function_name(code: str):
     function_pattern = r"def\s+([a-zA-Z_][a-zA-Z0-9_]+)\s*\("
     match = re.search(function_pattern, code, re.MULTILINE)
     if match:
@@ -326,7 +326,7 @@ def conversion_total(code, loop_unfolding_enabled=False, loop_count=3):
     # if it is function get the function name if not generate a function name
     function_name = "wrapper_" + str(random.randint(0, 10000000000))
     if check_single_function(code):
-        new_name = extract_function_names(code)
+        new_name = extract_function_name(code)
         print("new_name", new_name)
         if new_name:
             function_name = new_name

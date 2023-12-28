@@ -105,11 +105,3 @@ def detect_user_inputs2(code: str, function_name):
 def convert_all(user_input: str, loop_unroll: bool, unroll_count: int):
     my_code, function_name = conversion_total(user_input, loop_unroll, unroll_count)
     return detect_user_inputs2(my_code, function_name)
-
-
-if __name__ == "__main__":
-    print("AST/merged_all.py")
-    # with open("AST/code_2.py", 'r') as f:
-    #    code = f.read()
-    # mycode = conversion_total(code, loopUnfoldingEnabled=True, loop_count=3)
-    # detect_user_inputs2(mycode)

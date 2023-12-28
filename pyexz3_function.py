@@ -37,7 +37,8 @@ def pyexz3_function(file_path):
     app = loaderFactory(filename, options.entry)
     print("entry", options)
     if not app:
-        sys.exit(1)
+        print("Unable to load %s" % filename)
+        return False
 
     # Which file is being explored now
     print("Exploring " + app.getFile() + "." + app.getEntry())
@@ -55,6 +56,6 @@ def pyexz3_function(file_path):
         return False
 
     if result == None or result == True:
-        return generatedInputs
+        return {"PyXZ3": generatedInputs, "ChatGPT": gpt_ans}
     else:
         return False

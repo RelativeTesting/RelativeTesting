@@ -18,7 +18,7 @@ class AstWrapper:
         pred = Predicate(se, True)
         return pred
     
-    def parse_tree(self, expr):
+    def parse_tree(self, expr, func=None):
         if isinstance(expr, ast.Expr):
             return self.parse_tree(expr.value)
         elif isinstance(expr, ast.Compare):
@@ -32,9 +32,13 @@ class AstWrapper:
         elif isinstance(expr, ast.Call):
             return self.parse_call(expr)
         elif isinstance(expr, ast.Name):
-            return self.parse_name(expr)
+            return self.parse_name(expr, func)
         elif isinstance(expr, ast.Constant):
-            return self.parse_constant(expr)
+            return self.parse_constant(expr, func)
+        elif isinstance(expr, ast.Subscript):
+            return self.parse_subscript(expr)
+        elif isinstance(expr, ast.Slice):
+            return self.parse_slice(expr)
         else:
             print(type(expr).__name__)
             raise NotImplementedError("Weird expression")
@@ -50,16 +54,49 @@ class AstWrapper:
             raise NotImplementedError("Weird boolop operator")
 
     def parse_and(self, expr):
+        type_func = self.type_func
         pred1 = self.parse_tree(expr.values[0])
+        self.type_func = type_func
         pred2 = self.parse_tree(expr.values[1])
         expr = ["&", pred1, pred2]
         return expr
         
     def parse_or(self, expr):
+        type_func = self.type_func
         pred1 = self.parse_tree(expr.values[0])
+        self.type_func = type_func
         pred2 = self.parse_tree(expr.values[1])
         expr = ["|", pred1, pred2]
         return expr
+    
+    def parse_subscript(self, expr):
+        v = self.parse_tree(expr.value)
+        slce = expr.slice
+        if isinstance(slce, ast.Constant):
+            s = self.parse_tree(slce, int)
+            return v[s]
+        else:
+            l = self.parse_tree(slce.lower, int)
+            u = None
+            s = None
+            if slce.upper != None:
+                u = self.parse_tree(slce.upper, int)
+            if slce.step != None:
+                s = self.parse_tree(slce.step, int)
+
+            print("l", l, "u", u, "s", s)
+            if u == None:
+                return v[l:]
+            elif s == None:
+                return v[l:u]
+            else:
+                return v[l:u:s]
+        
+    
+    def parse_slice(self, expr):
+        raise NotImplementedError("Weird slice operator")
+
+
     
     def parse_compare(self, expr):
         if expr.ops[0].__class__.__name__ == "Eq":
@@ -78,8 +115,12 @@ class AstWrapper:
             raise NotImplementedError("Weird compare operator")
 
     def parse_eq(self, expr):
-        st = self.parse_tree(expr.left)
-        val = self.parse_tree(expr.comparators[0])
+        if isinstance(expr.left, ast.Constant):
+            val = self.parse_tree(expr.comparators[0])
+            st = self.parse_tree(expr.left)
+        else:    
+            st = self.parse_tree(expr.left)
+            val = self.parse_tree(expr.comparators[0])
         if isinstance(val, SymbolicType):
             expr = ["==", st, val]
         else:
@@ -87,8 +128,12 @@ class AstWrapper:
         return expr
         
     def parse_ne(self, expr):
-        st = self.parse_tree(expr.left)
-        val = self.parse_tree(expr.comparators[0])
+        if isinstance(expr.left, ast.Constant):
+            val = self.parse_tree(expr.comparators[0])
+            st = self.parse_tree(expr.left)
+        else:    
+            st = self.parse_tree(expr.left)
+            val = self.parse_tree(expr.comparators[0])
         if isinstance(val, SymbolicType):
             expr = ["!=", st, val]
         else:
@@ -96,8 +141,12 @@ class AstWrapper:
         return expr
         
     def parse_lt(self, expr):
-        st = self.parse_tree(expr.left)
-        val = self.parse_tree(expr.comparators[0])
+        if isinstance(expr.left, ast.Constant):
+            val = self.parse_tree(expr.comparators[0])
+            st = self.parse_tree(expr.left)
+        else:    
+            st = self.parse_tree(expr.left)
+            val = self.parse_tree(expr.comparators[0])
         if isinstance(val, SymbolicType):
             expr = ["<", st, val]
         else:
@@ -105,8 +154,12 @@ class AstWrapper:
         return expr
     
     def parse_lte(self, expr):
-        st = self.parse_tree(expr.left)
-        val = self.parse_tree(expr.comparators[0])
+        if isinstance(expr.left, ast.Constant):
+            val = self.parse_tree(expr.comparators[0])
+            st = self.parse_tree(expr.left)
+        else:    
+            st = self.parse_tree(expr.left)
+            val = self.parse_tree(expr.comparators[0])
         if isinstance(val, SymbolicType):
             expr = ["<=", st, val]
         else:
@@ -114,8 +167,12 @@ class AstWrapper:
         return expr
     
     def parse_gt(self, expr):
-        st = self.parse_tree(expr.left)
-        val = self.parse_tree(expr.comparators[0])
+        if isinstance(expr.left, ast.Constant):
+            val = self.parse_tree(expr.comparators[0])
+            st = self.parse_tree(expr.left)
+        else:    
+            st = self.parse_tree(expr.left)
+            val = self.parse_tree(expr.comparators[0])
         if isinstance(val, SymbolicType):
             expr = [">", st, val]
         else:
@@ -123,21 +180,27 @@ class AstWrapper:
         return expr
     
     def parse_gte(self, expr):
-        st = self.parse_tree(expr.left)
-        val = self.parse_tree(expr.comparators[0])
+        if isinstance(expr.left, ast.Constant):
+            val = self.parse_tree(expr.comparators[0])
+            st = self.parse_tree(expr.left)
+        else:    
+            st = self.parse_tree(expr.left)
+            val = self.parse_tree(expr.comparators[0])
         if isinstance(val, SymbolicType):
             expr = [">=", st, val]
         else:
             expr = [">=", st, self.type_func(val)]
         return expr
         
-    def parse_name(self, expr):
+    def parse_name(self, expr, func=None):
+        if func:
+            return expr.id
         return self.arg_constructor(expr.id , self.initial_val)
     
-    def parse_constant(self, expr):
+    def parse_constant(self, expr, func = None):
+        if func:
+            return func(expr.value)
         return self.type_func(expr.value)
-    
-
 
     def parse_binop(self, expr):
         raise NotImplementedError("Weird binop operator")
@@ -146,6 +209,11 @@ class AstWrapper:
         raise NotImplementedError("Weird unaryop operator")
 
     def parse_call(self, expr):
+        func = self.parse_tree(expr.func, True)
+        if func == "len":
+            param = self.parse_tree(expr.args[0])
+            self.type_func = int
+            return len(param)
         raise NotImplementedError("Weird call operator")
 
 

@@ -57,7 +57,7 @@ class ExplorationEngine:
 			model = self.solver.findCounterexample(self.invocation.pre_asserts, None , self.symbolic_inputs, self.solution_limit )
 			if model == None:
 				log.info("Pre-asserts are unsatisfiable, terminating")
-				return self.generated_inputs, self.execution_return_values, self.path
+				return self.generated_inputs, self.execution_return_values, self.path, None
 			else:
 				for name in model[0].keys():
 					self._updateSymbolicParameter(name,model[0][name])

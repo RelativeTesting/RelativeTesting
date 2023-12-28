@@ -3,20 +3,6 @@ import random
 import re
 import astor
 
-
-def convert_code_to_function(code):
-    tree = ast.parse(code)
-
-    new_function = ast.FunctionDef(
-        name='new_function',  # function name
-        args=ast.arguments(args=[], defaults=[], kwonlyargs=[], kw_defaults=[]),  # Arguments
-        body=tree.body,  # Code inside 
-        decorator_list=[]
-    )
-    tree.body = [new_function]
-    return astor.to_source(new_function)
-
-
 class LoopObject:
     def __init__(self, loop_node, children=[]):
         self.loop_node = loop_node
@@ -255,7 +241,6 @@ class LoopUnfolding(ast.NodeTransformer):
             fourth = fourth.replace(")", "")
             fourth = fourth.replace(":", "")
             fourth = fourth.split(",")
-            fourth = [int(i) for i in fourth]
             if len(fourth) == 1:
                 stop = fourth[0]
             elif len(fourth) == 2:
@@ -302,6 +287,19 @@ class LoopUnfolding(ast.NodeTransformer):
                     print('  ' * (indent + 1) + f'{child_name}: {child_value}')
 
 
+
+def convert_code_to_function(code):
+    tree = ast.parse(code)
+
+    new_function = ast.FunctionDef(
+        name='new_function',  # function name
+        args=ast.arguments(args=[], defaults=[], kwonlyargs=[], kw_defaults=[]),  # Arguments
+        body=tree.body,  # Code inside 
+        decorator_list=[]
+    )
+    tree.body = [new_function]
+    return astor.to_source(new_function)
+
 def check_single_function(code):
     try:
         parsed = ast.parse(code)
@@ -323,7 +321,6 @@ def extract_function_name(code: str):
         return match.group(1)
     else:
         return None
-
 
 def conversion_total(code, loop_unfolding_enabled=False, loop_count=3):
     # if it is function get the function name if not generate a function name
@@ -498,4 +495,13 @@ def func():
             print(y)
 """
 
-#print(conversion_total(code9, loopUnfoldingEnabled=True, loop_count=3))
+code10 ="""
+def func(x):
+
+    for i in range(x):
+    
+        print(i)
+"""
+
+txt, func = conversion_total(code10, loop_unfolding_enabled=True, loop_count=3)
+print(txt)

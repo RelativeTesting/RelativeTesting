@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 client=OpenAI(
-    api_key=os.getenv('GPT_API_KEY')
+    api_key=os.getenv('OPENAI_API_KEY')
 )
 with open("prompt.txt", "r", encoding='utf-8') as promptfile:
     prompt = promptfile.read()
@@ -29,3 +29,8 @@ chat_completion = client.chat.completions.create(
 with open('result.txt', 'w', encoding='utf-8') as file:
     file.write(chat_completion.choices[0].message.content)
 print(chat_completion.choices[0].message.content)
+
+function_name = "power"
+with  open(str(function_name)+".py", 'w') as f3:
+    f3.write("from symbolic.args import * \n"+ chat_completion.choices[0].message.content + "\n")
+    f3.write(code_fun)

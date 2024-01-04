@@ -1,7 +1,6 @@
-from symbolic.args import *
-
-
-@symbolic(param1 = "@ param1 > 10", param2 = "@ param2 != 0", param3 = "@ param3 != 0")
+from symbolic.args import * 
+@types(param1="int", param2="int", param3="int")
+@symbolic(param1="@((param1  == 0))", param2="@((param2 > 100))", param3="@((param3 < 10000))")
 def power(param1, param2, param3):
 	take_off_distance = 300 #km
 	flight_distance = 384400 #km
@@ -29,6 +28,3 @@ def power(param1, param2, param3):
 	print("The mission will take", format(days,".0f"),"day(s),", format(hours,".0f"), "hour(s),", format(minutes,".0f"), "minute(s)," , format(seconds,".2f"), "second(s).")
 
 	return 1
-def expected_result():
-	return {1}
-

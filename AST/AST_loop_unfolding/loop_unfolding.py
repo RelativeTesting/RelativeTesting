@@ -114,8 +114,6 @@ class LoopUnfolding(ast.NodeTransformer):
 
                 ## shift of loop
                 loop_shift = cond[:len(cond) - len(cond.lstrip())]
-                
-                print("loop_shift", loop_shift, len(loop_shift))
                 i = 0
                 first_line = self.code[node.lineno + i]
                 while first_line.lstrip() == "":
@@ -145,9 +143,10 @@ class LoopUnfolding(ast.NodeTransformer):
 
                 for i in range(self.unfold_count):
                     codes.append("\t" * i + cond)
+                    codes += ["\t" * i + line for line in lines]
                     if isinstance(node, ast.For):
                         codes += ["\t" * i + line for line in past]
-                    codes += ["\t" * i + line for line in lines]
+                    
                     
                 assert_cond = cond.replace("if", "assert")
                 assert_cond = assert_cond.replace(":", "")
@@ -175,7 +174,7 @@ class LoopUnfolding(ast.NodeTransformer):
                 # Type of loop
                 if isinstance(node, ast.For):
                     pre, cond, past = self._forloop_helper(cond, loop_shift, first_line_shift)
-
+                    past = [first_line[:first_line_shift_len] + p.lstrip() for p in past]
                 elif isinstance(node, ast.While):
                     cond = cond.replace("while", "if")
 
@@ -190,7 +189,7 @@ class LoopUnfolding(ast.NodeTransformer):
                             if line.lstrip() == "":
                                 interleaved_new.append("\n")
                             else:
-                                interleaved_new.append("\t" + loop_shift + line[first_line_shift_len:])
+                                interleaved_new.append(line)
                         codes += interleaved_new
 
                     child_codes = self._unfolding(child)
@@ -204,15 +203,16 @@ class LoopUnfolding(ast.NodeTransformer):
                         if line.lstrip() == "":
                             last_new.append("\n")
                         else:
-                            last_new.append("\t" + loop_shift + line[first_line_shift_len:])
+                            last_new.append(line)
                     codes += last_new
-
+                if isinstance(node, ast.For):
+                    codes += past
                 res = []
                 if isinstance(node, ast.For):
                     res.append(pre)
 
                 for i in range(self.unfold_count):
-                    tmp = ["\t" * i + line for line in codes]
+                    tmp = [first_line_shift * i + line for line in codes]
                     res += tmp
 
                 assert_cond = cond.replace("if", "assert")
@@ -236,10 +236,7 @@ class LoopUnfolding(ast.NodeTransformer):
         cond = ""
         pre = ""
         if "range" in fourth:
-            fourth = fourth.replace("range", "")
-            fourth = fourth.replace("(", "")
-            fourth = fourth.replace(")", "")
-            fourth = fourth.replace(":", "")
+            fourth = fourth.strip()[6:-1]
             fourth = fourth.split(",")
             if len(fourth) == 1:
                 stop = fourth[0]
@@ -423,7 +420,7 @@ def func():
 """
 
 code5 = """
-def func():
+def func(x):
     for i in range(5):
     
         print(i)
@@ -495,7 +492,7 @@ def func():
             print(y)
 """
 
-code10 ="""
+code11 ="""
 def func(x):
 
     for i in range(x):
@@ -503,5 +500,44 @@ def func(x):
         print(i)
 """
 
-txt, func = conversion_total(code10, loop_unfolding_enabled=True, loop_count=3)
+code12 ="""
+def func(x):
+
+    for i in range(x):
+        y = input()
+        for j in range(y):
+            z = input()
+"""
+
+code13 ="""
+def func(x):
+
+    for i in range(x):
+        y = input()
+        for j in range(y):
+            z = input()
+            for k in range(z):
+                print(k)
+"""
+
+code14 ="""
+def func(x):
+
+    while x < 10:
+        y = input()
+        for j in range(y):
+            x += int(input())
+"""
+    
+code15 ="""
+def func(x):
+
+    y = input()
+    for j in range(y):
+        while x < 10:
+            x += int(input())
+"""
+
+
+txt, func = conversion_total(code15, loop_unfolding_enabled=True, loop_count=2)
 print(txt)

@@ -1,8 +1,8 @@
 import utils
 
-from symbolic.symbolic_types.symbolic_int import SymbolicInteger
-from symbolic.symbolic_types.symbolic_str import SymbolicStr
-from symbolic.symbolic_types.symbolic_type import SymbolicType
+from RelativeTesting.symbolic.symbolic_types.symbolic_int import SymbolicInteger
+from RelativeTesting.symbolic.symbolic_types.symbolic_str import SymbolicStr
+from RelativeTesting.symbolic.symbolic_types.symbolic_type import SymbolicType
 from ..predicate import Predicate
 from z3 import *
 

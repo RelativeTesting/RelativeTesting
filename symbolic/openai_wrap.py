@@ -43,7 +43,7 @@ class Openai_wrap:
     
     def _simplify_constraint(self, constraint):
         if z3.is_not(constraint):
-            return "Not (" + self._simplify_constraint(constraint.children()[0]) + ")"
+            return "(Not " + self._simplify_constraint(constraint.children()[0]) + ")"
         elif z3.is_and(constraint):
             children = constraint.children()
             children = [self._simplify_constraint(child) for child in children]
@@ -56,77 +56,103 @@ class Openai_wrap:
             child1, child2 = constraint.children()
             return self._simplify_constraint(child1) + self._simplify_constraint(child2)
         elif isinstance(constraint, z3.ArithRef):
+            
             if isinstance(constraint, z3.IntNumRef) or isinstance(constraint, z3.BitVecNumRef) or isinstance(constraint, z3.SeqRef):
                 return ""
+            if "str" in str(constraint.children()[0]):
+                return self._string_helper(str(constraint.children()[0])) 
             return str(constraint.children()[0])
         elif isinstance(constraint, z3.IntNumRef) or isinstance(constraint, z3.BitVecNumRef) or isinstance(constraint, z3.SeqRef):
             return ""
         else:
             return str(constraint)
             
-    
-    def general_prompt(self):
-        return "You are a constraint solver. You will be provided with list of queries. Each query is a list of constraints. \
-                You will solve the queries independently and find the parameters that satisfies the constraints in the query. \
-                You need to find the parameters such that each constraint in the query should evaluate True. There can be multiple parameters for each query. \
-                Give the result in JSON format, Do not add explanations. \
-                Each query will be between 'Query Start:' and 'END' keywords. \
-                The constraints should be reseted after each query.\
-                If you cannot find parameters to satisfy all the query constraints, simply return None \
-                If you can solve the query constraints, return the parameters that satisfies ALL the constraints. \
-                For each query, return the result that satisfies the constraints in a dictionary format. \
-                Each result of a query should be in the following format: query1_res = {param1: value1, param2: value2, ...} \
-                Always check the result you provided. If it is not correct, try again. \
-                There should be exactly one dictionary for each query. \
-                A result dictionary should contain all the parameters in the query. \
-                For example, if the constraint is '[x > 3, x < 10, y > 5]' the param dictionary should be {x: 4, y: 6}. \
-                You will be provided with list of queries. \
-                Overall result should be in the following format: [query1_res, query2_res, ...] \
-                A general example: \
-                Queries To Be Solved \
-                Query 0: [x > 3 and x < 10, y > 5] \
-                Query 1: [x < 3, y > 8] \
-                Query 2: [x > 27, y > 5, z > 3] \
-                You will return the following: \
-                [{x: 4, y: 6}, {x: 2, y: 9}, {x: 28, y: 6, z: 4}] \
-                "
+    def _string_helper(self, constraint_line):
+        if "str.<" in constraint_line:
+            constraint_line = constraint_line.replace("str.<", "")[1:-1].split(",")
+            constraint_line = constraint_line[0] + " < " + constraint_line[1]
+        elif "str.>" in constraint_line:
+            constraint_line = constraint_line.replace("str.>", "")[1:-1].split(",")
+            constraint_line = constraint_line[0] + " > " + constraint_line[1]
+        elif "str.==" in constraint_line:
+            constraint_line = constraint_line.replace("str.==", "")[1:-1].split(",")
+            constraint_line = constraint_line[0] + " == " + constraint_line[1]
+        elif "str.!=" in constraint_line:
+            constraint_line = constraint_line.replace("str.!=", "")[1:-1].split(",")
+            constraint_line = constraint_line[0] + " != " + constraint_line[1]
+        elif "str.<=" in constraint_line:
+            constraint_line = constraint_line.replace("str.<=", "")[1:-1].split(",")
+            constraint_line = constraint_line[0] + " <= " + constraint_line[1]
+        elif "str.>=" in constraint_line:
+            constraint_line = constraint_line.replace("str.>=", "")[1:-1].split(",")
+            constraint_line = constraint_line[0] + " >= " + constraint_line[1]
+        elif "str.substr" in constraint_line:
+            constraint_line = constraint_line.replace("str.substr", "")[1:]
+            idx = constraint_line.find(')')
+            value = constraint_line[:idx].split(",")
+            remain = constraint_line[idx+1:]
+            constraint_line = value[0] + "[" + value[1] + "]" + remain
+
+
+
+        return constraint_line
+
+    def general_prompt(self, additional_prompt=""):
+        return "You are a constraint solver. You are provided with list of queries. Each query is a list of constraints.\n \
+                Solve the queries independently and find the parameters that satisfies the constraints in the query.\n \
+                Find the parameters such that each constraint in the query should evaluate True.\n \
+                Each query will be between 'Query Start:' and 'END' keywords.\n \
+                The constraints should be reseted after each query.\n \
+                Give the result in JSON format, Do not add explanations.\n \
+                If you cannot find parameters to satisfy all the query constraints, simply return {} empty dictionary.\n \
+                For each query, return the result that satisfies the constraints in a dictionary format.\n \
+                Example: query1_res = {param1: value1, param2: value2, ...}.\n \
+                Check the result you provided. If it is not correct, try again.\n \
+                There should be exactly one dictionary for each query.\n \
+                Another example: if the constraint is '[x > 3, x < 10, y > 5]' the param dictionary should be {x: 4, y: 6}.\n \
+                A general example:\n \
+                Queries To Be Solved\n \
+                Query Start: x > 3 and x < 10 and y > 5 END\n \
+                Query Start: x < 3 and y > 8 END\n \
+                Query Start: x > 27 and y > 5 and z > 3 END\n \
+                You will return the following:\n \
+                [{x: 4, y: 6}, {x: 2, y: 9}, {x: 28, y: 6, z: 4}]\n \
+                Finally, satisfy the semantic constraints in the additional prompt. Additional prompt: \
+                " + additional_prompt
    
     def full_conversation(self):
-        system_prompt = self.general_prompt()
-        constraint_promt = self.constraint_prompt()
-
-        print("GPT Prompt:",constraint_promt)
-
-        completion = self.client.chat.completions.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": constraint_promt},
-        ]
-        )
         
-        gpt_res = completion.choices[0].message.content
         try:
+            system_prompt = self.general_prompt()
+            constraint_promt = self.constraint_prompt()
+
+            print("GPT Prompt:",constraint_promt)
+
+            completion = self.client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": constraint_promt},
+            ]
+            )
+            
+            gpt_res = completion.choices[0].message.content
             gpt_res = json.loads(gpt_res)
+            combine_gpt = []
+            inputs = list(self.constraints.values())
+
+            for i, sol in enumerate(gpt_res):
+                if sol == {}:
+                    continue
+                inpt = inputs[i]
+                res = {}
+                for key, val in inpt.items():
+                    if key in sol:
+                        res[key] = sol[key]
+                    else:
+                        res[key] = val
+                combine_gpt.append(res)
+                return combine_gpt
         except:
             return []
 
-        combine_gpt = []
-        inputs = list(self.constraints.values())
-
-        for i, sol in enumerate(gpt_res):
-            if sol == None:
-                continue
-            inpt = inputs[i]
-            res = {}
-            for key, val in inpt.items():
-                if key in sol:
-                    res[key] = sol[key]
-                else:
-                    res[key] = val
-            combine_gpt.append(res)
-        
-        
-        #print("GPT Result:", combine_gpt)
-
-        return combine_gpt

@@ -58,7 +58,7 @@ class ExplorationEngine:
 			model = self.solver.findCounterexample(self.invocation.pre_asserts, None , self.symbolic_inputs, self.solution_limit )
 			if model == None:
 				log.info("Pre-asserts are unsatisfiable, terminating")
-				return self.generated_inputs, self.execution_return_values, self.path, None
+				return self.generated_inputs, self.execution_return_values, self.path, []
 			else:
 				for name in model[0].keys():
 					self._updateSymbolicParameter(name,model[0][name])
@@ -67,7 +67,7 @@ class ExplorationEngine:
 		iterations = 1
 		if max_iterations != 0 and iterations >= max_iterations:
 			log.debug("Maximum number of iterations reached, terminating")
-			return self.execution_return_values
+			return [], self.execution_return_values, self.path, []
 		while not self._isExplorationComplete():
 			selected = self.constraints_to_solve.popleft()
 			if selected.processed:
@@ -101,7 +101,7 @@ class ExplorationEngine:
 				break
 
 		#gptRes = None
-		gptRes = self.openai_wrap.full_conversation(self.constraint_input)
+		gptRes = self.openai_wrap.full_conversation(self.constraint_input) 
 		generetadInputs = []
 		for i in range(len(self.generated_inputs)):
 			lst = self.generated_inputs[i]

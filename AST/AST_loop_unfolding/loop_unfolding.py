@@ -539,7 +539,16 @@ def func(x):
         while x < 10:
             x += int(input())
 """
+code16 = """
+def test_str(x):
+    while x < 10:
+        user_input = input("Enter a string (type 'exit' to end): ")
+        if user_input == 'exit':
+            print("Exiting the program.")
+        else:
+            print("Please enter a valid string for stop.")
+        x=x+1
+"""
 
-
-# txt, func = conversion_total(code15, loop_unfolding_enabled=True, loop_count=2)
-# print(txt)
+txt, func = conversion_total(code16, loop_unfolding_enabled=True, loop_count=2)
+print(txt)

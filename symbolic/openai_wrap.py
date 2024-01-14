@@ -152,7 +152,8 @@ class Openai_wrap:
                     else:
                         res[key] = val
                 combine_gpt.append(res)
-                return combine_gpt
+            assert combine_gpt != None
+            return combine_gpt
         except:
             return []
 

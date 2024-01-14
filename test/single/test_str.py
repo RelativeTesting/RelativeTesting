@@ -79,15 +79,35 @@ from symbolic.args import *
 # def test_str(x,y):
 #     a = ((x*5)*4)+20
 
-@types(x="str", y="str")
-def test_str(x,y):
-    if x > y:
-        return 1
-    return 2
+# @types(x="str", y="str")
+# def test_str(x,y):
+#     if x > y:
+#         return 1
+#     return 2
 
-def test():
-    x = int(input())
-    if x > 3:
-        return 1
-    return 2
+# def test_str(x):
+#     if x > 1200:
+#         print("aksdnjaksd")
 
+# def test():
+#     x = int(input())
+#     if x > 3:
+#         return 1
+#     retu
+@types(param1="str", param2="str")
+def test_str(x, param1, param2):
+    if x < 10:
+            user_input = param1
+            if user_input == 'exit':
+                print("Exiting the program.")
+            else:
+                print("Please enter a valid string for stop.")
+            x=x+1
+            if x < 10:
+                    user_input = param2
+                    if user_input == 'exit':
+                        print("Exiting the program.")
+                    else:
+                        print("Please enter a valid string for stop.")
+                    x=x+1
+    assert x < 10

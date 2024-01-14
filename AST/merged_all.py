@@ -80,14 +80,16 @@ def detect_user_inputs2(code: str, function_name):
     my_real_inputs = list(type_user_inputs2(code).values())
     # print(my_real_inputs)
     updated_body = []
+    arg_list=[]
     for node in new_tree.body:
         if isinstance(node, ast.FunctionDef):
             updated_body.append(node.body)
+            arg_list = [arg.arg for arg in node.args.args]
     function_node = ast.FunctionDef(
         name=function_name,
         args=ast.arguments(
-            args=[ast.arg(arg=list(visitor.user_inputs.keys())[i], annotation=None) for i in
-                  range(len(visitor.user_inputs.keys()))],
+            args=arg_list +([ast.arg(arg=list(visitor.user_inputs.keys())[i], annotation=None) for i in
+                  range(len(visitor.user_inputs.keys()))]),
             vararg=None,
             kwonlyargs=[],
             kw_defaults=[],

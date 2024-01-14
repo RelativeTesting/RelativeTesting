@@ -237,6 +237,8 @@ class LoopUnfolding(ast.NodeTransformer):
         pre = ""
         if "range" in fourth:
             fourth = fourth.strip()[6:-1]
+            if fourth[-1] == ")":
+                fourth = fourth[:-1]
             fourth = fourth.split(",")
             if len(fourth) == 1:
                 stop = fourth[0]

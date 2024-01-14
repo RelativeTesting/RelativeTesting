@@ -5,7 +5,7 @@ from RelativeTesting.symbolic.loader import *
 from RelativeTesting.symbolic.explore import ExplorationEngine
 
 
-def pyexz3_function(file_path, test_case_count):
+def pyexz3_function(file_path, test_case_count, constraint_input, preconstaint_input):
     sys.path = [os.path.abspath(os.path.join(os.path.dirname(__file__)))] + sys.path
     sys.path.append(os.path.join(os.path.dirname(__file__), 'RelativeTesting'))
     print(sys.path)

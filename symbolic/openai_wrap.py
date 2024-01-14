@@ -123,8 +123,8 @@ class Openai_wrap:
     def full_conversation(self, constraint_input):
         
         try:
-            system_prompt = self.general_prompt()
-            constraint_promt = self.constraint_prompt(constraint_input)
+            system_prompt = self.general_prompt(constraint_input)
+            constraint_promt = self.constraint_prompt()
 
             print("GPT Prompt:",constraint_promt)
 

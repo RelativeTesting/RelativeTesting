@@ -49,7 +49,7 @@ print ("Exploring " + app.getFile() + "." + app.getEntry())
 
 result = None
 try:
-	engine = ExplorationEngine(app.createInvocation(), solver=solver, solution_limit=options.solution_count )
+	engine = ExplorationEngine(app.createInvocation(), constraint_input="", solver=solver, solution_limit=options.solution_count )
 	generatedInputs, returnVals, path, gpt_ans = engine.explore(options.max_iters)
 	# check the result
 	result = app.executionComplete(returnVals)

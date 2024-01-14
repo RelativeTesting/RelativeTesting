@@ -79,12 +79,11 @@ from symbolic.args import *
 # def test_str(x,y):
 #     a = ((x*5)*4)+20
 
+@types(x="str", y="str")
 def test_str(x,y):
-    a = 10 / x
-
-    if y > 8:
-        return 2
-    return 1
+    if x > y:
+        return 1
+    return 2
 
 def test():
     x = int(input())

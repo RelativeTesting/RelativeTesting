@@ -27,4 +27,10 @@ class Z3Integer(Z3Expression):
 			l = 0 != l
 			r = 0 != r
 			return And(l, r)
+		if isinstance(l, ArithRef) and isinstance(r, BoolRef):
+			l = 0 != l
+			return And(l, r)
+		if isinstance(l, BoolRef) and isinstance(r, ArithRef):
+			r = 0 != r
+			return And(l, r)
 		return Z3Expression._and(self,l, r,solver)(l, r)

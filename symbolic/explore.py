@@ -16,9 +16,10 @@ from .openai_wrap import Openai_wrap
 log = logging.getLogger("se.conc")
 
 class ExplorationEngine:
-	def __init__(self, funcinv, solver="z3", solution_limit=1):
+	def __init__(self, funcinv, constraint_input, solver="z3", solution_limit=1):
 		self.invocation = funcinv
 		self.solution_limit = solution_limit
+		self.constraint_input = constraint_input
 		# the input to the function
 		self.symbolic_inputs = {}  # string -> SymbolicType
 		# initialize
@@ -100,7 +101,7 @@ class ExplorationEngine:
 				break
 
 		#gptRes = None
-		gptRes = self.openai_wrap.full_conversation()
+		gptRes = self.openai_wrap.full_conversation(self.constraint_input)
 		generetadInputs = []
 		for i in range(len(self.generated_inputs)):
 			lst = self.generated_inputs[i]

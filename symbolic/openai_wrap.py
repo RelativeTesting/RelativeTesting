@@ -120,11 +120,11 @@ class Openai_wrap:
                 Finally, satisfy the semantic constraints in the additional prompt. Additional prompt: \
                 " + additional_prompt
    
-    def full_conversation(self):
+    def full_conversation(self, constraint_input):
         
         try:
             system_prompt = self.general_prompt()
-            constraint_promt = self.constraint_prompt()
+            constraint_promt = self.constraint_prompt(constraint_input)
 
             print("GPT Prompt:",constraint_promt)
 

@@ -1,39 +1,76 @@
-PyExZ3
-======
+# RelativeTesting
 
-###Python Exploration with Z3
+## Automated Test Case Generation with Symbolic Execution and LLM-Powered Constraint Solving
 
-This code is a substantial rewrite of the NICE project's
-(http://code.google.com/p/nice-of/) symbolic execution engine for
-Python, now using the Z3 theorem prover (http://z3.codeplex.com). We have
-removed the NICE-specific dependences, platform-specific code, and
-made various improvements, documented below, so it can be used
-by anyone wanting to experiment with dynamic symbolic execution.
+**RelativeTesting** is a dynamic symbolic execution engine for Python that automatically generates test cases achieving condition coverage. It extends [PyExZ3](http://research.microsoft.com/apps/pubs/?id=233035) (by Thomas Ball, Microsoft Research) with GPT-4 fallback constraint solving, AST-based loop unfolding, string type support, and a pre-constraint mechanism for defining input constraints via AST annotations.
 
-The paper [Deconstructing Dynamic Symbolic Execution](http://research.microsoft.com/apps/pubs/?id=233035)
-explains the basic ideas behind dynamic symbolic execution and the architecture
-of the PyExZ3 tool (as of git tag v1.0).  Bruni, Disney and Flanagan wrote about 
-encoding symbolic execution for Python in Python in the same way in their 2008 paper 
-[A Peer Architecture for Lightweight Symbolic Execution](http://hoheinzollern.files.wordpress.com/2008/04/seer1.pdf) - they use proxies rather than multiple inheritance for representing symbolic versions of Python types. 
+This project was developed as a Sabanci University graduation project (ENS 492).
 
-In the limit, **PyExZ3** attempts to *explore* all the feasible paths in a
-Python function by:
-- executing the function on a concrete input to trace a path through the control flow of the function;
-- symbolic executing the path to determine how its conditions depend on the function's input parameters;
-- generating new values for the parameters to drive the function to yet uncovered paths, using Z3.  
+---
 
-For small programs without loops or recursion, 
-**PyExZ3** may be able to explore all feasible paths.
+## Key Features
 
-A novel aspect of the rewrite is to rely solely on Python's operator
-overloading to accomplish all the interception needed for symbolic
-execution; no AST rewriting or bytecode instrumentation is required,
-This significantly improves the robustness and portability of **PyExZ3**, 
-as well as reducing its size.
+RelativeTesting builds on the PyExZ3 foundation with the following additions:
 
-###Setup instructions:
+- **GPT-4 Fallback Constraint Solving** -- When Z3 cannot solve a constraint (e.g., semantic or non-linear constraints), the system falls back to OpenAI GPT-4 to generate satisfying inputs.
+- **AST-Based Loop Unfolding** -- Loops are transformed into sequential code via AST rewriting, enabling symbolic analysis of iterative constructs that would otherwise be difficult to explore.
+- **String Symbolic Execution** -- Support for symbolic string parameters (`SymbolicStr`), extending beyond the original integer-only symbolic types.
+- **Pre-Constraint Mechanism** -- Users can define constraints on test inputs via AST annotations, allowing more targeted test generation.
+- **Input-to-Function Parameter Conversion** -- Automated conversion of generated inputs into function parameters for direct execution.
 
-- Make sure that you use Python 32-bit (64-bit) if-and-only-if you use the Z3 32-bit (64-bit) binaries. 
+---
+
+## How It Works
+
+Dynamic symbolic execution in RelativeTesting follows these steps:
+
+1. **Concrete execution on symbolic arguments.** The target function is executed with symbolic arguments (`SymbolicInteger` and `SymbolicStr` inherit from both `SymbolicObject` and the native `int`/`str` types). This dual inheritance allows the function to run concretely while collecting symbolic information.
+2. **Branch condition interception.** Python's `__bool__` method is overridden to intercept all branch conditions during execution, building a constraint tree that captures the path taken through the program.
+3. **Constraint solving with Z3.** The Z3 theorem prover is used as the primary solver to negate path constraints and generate new inputs that will drive execution down previously uncovered paths.
+4. **GPT-4 fallback.** When Z3 cannot solve a constraint (e.g., due to semantic or non-linear relationships), the constraint is passed to GPT-4, which attempts to produce a satisfying assignment.
+5. **Loop unfolding via AST rewriting.** Before symbolic execution, loops in the target code are unfolded into sequential if-statements using AST transformations, enabling the symbolic engine to reason about iterative behavior.
+
+---
+
+## Architecture
+
+```
+User Code --> Loader --> ExplorationEngine
+                             |-- PathToConstraint (branch interception via __bool__)
+                             |-- Z3Wrapper (primary solver)
+                             |-- Openai_wrap (GPT-4 fallback)
+                             +-- LoopUnfolding (AST preprocessing)
+```
+
+---
+
+## Project Structure
+
+```
+pyexz3.py                  -- CLI entry point
+symbolic/                   -- Core symbolic execution engine
+    explore.py              -- ExplorationEngine
+    path_to_constraint.py   -- Constraint tree builder
+    openai_wrap.py          -- GPT-4 fallback solver
+    symbolic_types/         -- SymbolicInteger, SymbolicStr, SymbolicDict
+    z3_expr/                -- Z3 expression builders
+AST/                        -- Loop unfolding and input detection
+    AST_loop_unfolding/
+        loop_unfolding.py   -- AST-based loop transformation
+generator/                  -- Input-to-function conversion
+    func_generator.py       -- Parameter conversion utilities
+test/                       -- Test cases for symbolic execution
+reports/                    -- Project report
+run_tests.py                -- Test runner
+```
+
+---
+
+## Installation
+
+### Setup Instructions
+
+- Make sure that you use Python 32-bit (64-bit) if-and-only-if you use the Z3 32-bit (64-bit) binaries.
 Testing so far has been on Python 3.2.3 and 32-bit.
 - Install Python 3.2.3 (https://www.python.org/download/releases/3.2.3/)
 - Install the latest "unstable" release of Z3 to directory Z3HOME from http://z3.codeplex.com/releases
@@ -41,79 +78,18 @@ Testing so far has been on Python 3.2.3 and 32-bit.
 - Add Z3HOME\bin to PATH and PYTHONPATH
 - MacOS: setup.sh for Homebrew default locations for Python and Z3; see end for MacOS specific instructions
 - Optional:
--- install GraphViz utilities (http://graphviz.org/)
+  - Install GraphViz utilities (http://graphviz.org/)
 
-### Check that everything works:
-
-- `python run_tests.py test` should pass all tests
-
-- `python pyexz3.py test\FILE.py` to run a single test from the test directory
-
-### Usage of PyExZ3
-
-- **Basic usage**: give a Python file `FILE.py` as input. By default, `pyexz3` expects `FILE.py` 
-to contain a function named `FILE` where symbolic execution will start:
-
-  - `pyexz3 FILE.py`
-
-- **Starting function**: You can override the default starting function with `--start MAIN`,
-where `MAIN` is the name of a  function in `FILE`: 
-
-  - pyexz3 `--start=MAIN` FILE.py
-
-- **Bounding the number of iterations** of the path exploration is essential when
-analyzing functions with loops and/or recursion. Specify a bound using the `max-iters` flag:
-
-  - pyexz3 `--max-iters=42` FILE.py
-
-- **Arguments to starting function**: by default, pyexz3 associates a symbolic integer
-(with initial value 0) for each parameter of the starting function. Import from
-`symbolic.args` to get the `@concrete` and `@symbolic` decorators that let you override
-the defaults on the starting function:
-  ```
-from symbolic.args import *
-
-@concrete(a=1,b=2)
-@symbolic(c=3)
-def startingfun(a,b,c,d):
-    ...
-  ```
-  The `@concrete` decorator declares that a parameter will not be treated symbolically and
-provides an initial value for the parameter.
-The `@symbolic` decorator declares that a parameter will be treated symbolically - the type 
-of the associated initial value for the argument will be used to determine the proper symbolic 
-type  (if one exists).   In the above example, parameters `a` and `b` are treated concretely
-and will have initial values `1` and `2` (for all paths explored), and parameter `c` will 
-be treated as a symbolic integer input with the initial value `3` (its value can change after
-first path has been explored). Since parameter `d` is not specified, it will be treated as a symbolic 
-integer input with the initial value 0:
-
-- **Output**: `pyexz3` prints the list of generated inputs and corresponding observed 
-return values to standard out; the lists of generated inputs and the corresponding return values are
-returned by the exploration engine to `pyexz3` where they can be used for other 
-purposes, as described below.
-
-- **Expected result functions** are used for testing of `pyexz3`. If the `FILE.py` contains a function named `expected_result` then after path exploration is complete, the list of return values will be compared against the list 
-returned by `expected_result`. More precisely, the two lists are converted into bags and the bags compared for equality. If a function named `expected_result_set` is present instead, the list are converted into sets and the sets are
-compared for equality.  List equality is too strong a criteria for testing, since small changes to programs can lead to paths being explored in different orders. 
-
-- **Import behavior**: the location of the `FILE.py` is added to the import path so that all imports in `FILE.py` 
-relative to that file will work.
-
-- **Other options**
-  - `--graph=DOTFILE`
-  - `--log=LOGFILE`
-
-### MacOS specific
+### MacOS Specific
 
 1. Grab yourself a Brew at http://brew.sh/
 2. Get the newest python or python3 version: `brew install python`
-3. Have the system prefer brew python over system python: `echo export PATH='/usr/local/bin:$PATH' >> ~/.bash_profile`  - 
+3. Have the system prefer brew python over system python: `echo export PATH='/usr/local/bin:$PATH' >> ~/.bash_profile`
 4. Get z3: `brew install homebrew/science/z3`
-5. Clone this repository: `git clone https://github.com/thomasjball/PyExZ3.git` 
+5. Clone this repository: `git clone https://github.com/thomasjball/PyExZ3.git`
 6. Set the PATH: `. PyExZ3/setup.sh`  (do not run the setup script in a subshell `./ PyExZ3/`)
 
-### Vagrant specific
+### Vagrant Specific
 
 [Vagrant](http://www.vagrantup.com/) is a cross-platform tool to manage
 virtualized development environments. Vagrant runs on Windows, OS X, and
@@ -136,15 +112,158 @@ is hosted.
 
 ### CVC SMT Solver
 
-By default PyExZ3 uses the Z3 to solve path predicates. Optionally, the 
-[CVC SMT](http://cvc4.cs.nyu.edu/web/) solver can be enabled with the 
-`--cvc` argument. While the two solvers offer a similar feature set, the 
-integration of CVC differs from Z3 in a number of ways. Most 
-predominately, the CVC integration uses an unbounded rational number 
-representation for Python numbers, converting to bit vectors only for 
-bitwise operations. The Z3 integration uses bounded bit vectors for all 
-numbers. For programs that use any significant number of bitwise 
-operations, the default Z3-based configuration is strongly recommended. 
-Additionally, CVC does not support generating models for non-linear 
-relationships causing a few of the included PyExZ3 test cases to fail 
+By default PyExZ3 uses the Z3 to solve path predicates. Optionally, the
+[CVC SMT](http://cvc4.cs.nyu.edu/web/) solver can be enabled with the
+`--cvc` argument. While the two solvers offer a similar feature set, the
+integration of CVC differs from Z3 in a number of ways. Most
+predominately, the CVC integration uses an unbounded rational number
+representation for Python numbers, converting to bit vectors only for
+bitwise operations. The Z3 integration uses bounded bit vectors for all
+numbers. For programs that use any significant number of bitwise
+operations, the default Z3-based configuration is strongly recommended.
+Additionally, CVC does not support generating models for non-linear
+relationships causing a few of the included PyExZ3 test cases to fail
 with a `LogicException`.
+
+### Check That Everything Works
+
+- `python run_tests.py test` should pass all tests
+- `python pyexz3.py test/FILE.py` to run a single test from the test directory
+
+---
+
+## Usage
+
+### Basic Usage
+
+Give a Python file `FILE.py` as input. By default, `pyexz3` expects `FILE.py`
+to contain a function named `FILE` where symbolic execution will start:
+
+```bash
+python pyexz3.py test/simple.py
+```
+
+### Starting Function
+
+You can override the default starting function with `--start MAIN`,
+where `MAIN` is the name of a function in `FILE`:
+
+```bash
+python pyexz3.py --start=MAIN test/FILE.py
+```
+
+### Bounding Iterations
+
+Bounding the number of iterations of the path exploration is essential when
+analyzing functions with loops and/or recursion. Specify a bound using the `--max-iters` flag:
+
+```bash
+python pyexz3.py --max-iters=42 test/binary_search.py
+```
+
+### Arguments to Starting Function
+
+By default, pyexz3 associates a symbolic integer (with initial value 0) for each
+parameter of the starting function. Import from `symbolic.args` to get the
+`@concrete` and `@symbolic` decorators that let you override the defaults on the
+starting function:
+
+```python
+from symbolic.args import *
+
+@concrete(a=1, b=2)
+@symbolic(c=3)
+def startingfun(a, b, c, d):
+    ...
+```
+
+The `@concrete` decorator declares that a parameter will not be treated symbolically
+and provides an initial value for the parameter. The `@symbolic` decorator declares
+that a parameter will be treated symbolically -- the type of the associated initial
+value for the argument will be used to determine the proper symbolic type (if one
+exists). In the above example, parameters `a` and `b` are treated concretely and
+will have initial values `1` and `2` (for all paths explored), and parameter `c`
+will be treated as a symbolic integer input with the initial value `3` (its value
+can change after the first path has been explored). Since parameter `d` is not
+specified, it will be treated as a symbolic integer input with the initial value 0.
+
+### Running the Test Suite
+
+```bash
+python run_tests.py test
+```
+
+### Other Options
+
+- `--graph=DOTFILE` -- Generate a graph of the explored paths in DOT format.
+- `--log=LOGFILE` -- Write a log of the exploration to a file.
+- `--cvc` -- Use the CVC SMT solver instead of Z3.
+
+### Output
+
+`pyexz3` prints the list of generated inputs and corresponding observed
+return values to standard out. The lists of generated inputs and the corresponding
+return values are returned by the exploration engine to `pyexz3` where they can be
+used for other purposes.
+
+### Expected Result Functions
+
+If `FILE.py` contains a function named `expected_result`, then after path
+exploration is complete, the list of return values will be compared against the
+list returned by `expected_result`. More precisely, the two lists are converted
+into bags and the bags compared for equality. If a function named
+`expected_result_set` is present instead, the lists are converted into sets and
+the sets are compared for equality. List equality is too strong a criteria for
+testing, since small changes to programs can lead to paths being explored in
+different orders.
+
+### Import Behavior
+
+The location of `FILE.py` is added to the import path so that all imports in
+`FILE.py` relative to that file will work.
+
+---
+
+## Tech Stack
+
+- **Python 3** -- Core language
+- **Z3 Theorem Prover** -- Primary constraint solver
+- **OpenAI GPT-4 API** -- Fallback constraint solver
+- **Python AST module** -- Loop unfolding and code transformation
+- **astor** -- AST-to-source conversion
+
+---
+
+## Report
+
+The project report is available at:
+
+`reports/ENS 492_Progress Report-II .docx.pdf`
+
+---
+
+## Authors
+
+**Students:**
+- Gorkem Yar
+- Enis Mert Kuzu
+- Huseyin Alper Karadeniz
+- Rebah Ozkoc
+
+**Supervisors:**
+- Cemal Yilmaz
+- Husnu Yenigun
+
+---
+
+## Acknowledgments
+
+This project is based on **PyExZ3** by Thomas Ball (Microsoft Research). The original tool and its design are described in the paper [Deconstructing Dynamic Symbolic Execution](http://research.microsoft.com/apps/pubs/?id=233035).
+
+The NICE project (http://code.google.com/p/nice-of/) provided the original symbolic execution engine for Python. Bruni, Disney, and Flanagan described encoding symbolic execution for Python in Python in their 2008 paper [A Peer Architecture for Lightweight Symbolic Execution](http://hoheinzollern.files.wordpress.com/2008/04/seer1.pdf).
+
+---
+
+## License
+
+See `copyright.txt` for license information.
